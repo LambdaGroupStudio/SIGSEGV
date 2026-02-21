@@ -10,5 +10,5 @@ typedef struct Player {
 
 Player initPlayer(void);
 void displayPlayer(Player player);
-void movePlayer(Player* player);
+void handleMovement(Player* player);
 void updatePlayer(Player* player);
