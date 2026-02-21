@@ -1,59 +1,79 @@
 #include "player.h"
 #include "globals.h"
 #include "raylib.h"
-#include "helpers.h"
 
 void displayPlayer(Player player) {
     DrawRectangle((int)player.x, (int)player.y, player.width, player.height, RED);
 }
 
 void handleInput(Player* player) {
-    if (IsKeyDown(KEY_D)) {
-        player->velocityX += player->acceleration * deltaTime;
+    float moveInput = 0.0f;
+
+    if (IsKeyDown(KEY_D)) moveInput += 1.0f;
+    if (IsKeyDown(KEY_A)) moveInput -= 1.0f;
+
+    if (moveInput != 0.0f) {
+        if ((moveInput > 0.0f && player->velocityX < 0.0f) ||
+            (moveInput < 0.0f && player->velocityX > 0.0f)) {
+            player->velocityX = 0.0f;
+        }
+        player->velocityX += moveInput * player->acceleration * deltaTime;
+    } else {
+        if (player->velocityX > 0.0f) {
+            player->velocityX -= player->friction * deltaTime;
+            if (player->velocityX < 0.0f) player->velocityX = 0.0f;
+        } else if (player->velocityX < 0.0f) {
+            player->velocityX += player->friction * deltaTime;
+            if (player->velocityX > 0.0f) player->velocityX = 0.0f;
+        }
     }
-    if (IsKeyDown(KEY_A)) {
-        player->velocityX -= player->acceleration * deltaTime;
-    }
+
+    if (player->velocityX > player->maxSpeed) player->velocityX = player->maxSpeed;
+    if (player->velocityX < -player->maxSpeed) player->velocityX = -player->maxSpeed;
 }
 
 void handleMovement(Player* player) {
-    // Apply velocity to position
     player->x += player->velocityX * deltaTime;
     player->y += player->velocityY * deltaTime;
 
-    // Clamp velocity to max speed
-    if (player->velocityX > player->maxSpeed) {
-        player->velocityX = player->maxSpeed;
-    } else if (player->velocityX < -player->maxSpeed) {
-        player->velocityX = -player->maxSpeed;
+    if (player->x < 0.0f) {
+        player->x = 0.0f;
+        player->velocityX = 0.0f;
+    }
+    if (player->x + player->width > (float)GetScreenWidth()) {
+        player->x = (float)GetScreenWidth() - player->width;
+        player->velocityX = 0.0f;
     }
 }
 
 void handleGravity(Player* player) {
-    if (player->y + player->height < GetScreenHeight()) { // Simple ground check
+    float groundY = (float)GetScreenHeight() - player->height;
+
+    if (player->y < groundY) {
         player->velocityY += gravity * deltaTime;
     } else {
+        player->y = groundY;
         player->velocityY = 0.0f;
-        player->y = GetScreenHeight() - player->height; // Snap to ground
     }
 }
 
 void updatePlayer(Player* player) {
     handleInput(player);
-    handleMovement(player);
     handleGravity(player);
+    handleMovement(player);
     displayPlayer(*player);
 }
 
 Player initPlayer(void) {
-    Player player;
+    Player player = {0};
     player.x = 100.0f;
     player.y = 100.0f;
-    player.width = 100;
-    player.height = 100;
+    player.width = 100.0f;
+    player.height = 100.0f;
     player.velocityX = 0.0f;
     player.velocityY = 0.0f;
-    player.acceleration = 10.0f;
-    player.maxSpeed = 500.0f;
+    player.acceleration = 2000.0f;
+    player.friction = 1500.0f;
+    player.maxSpeed = 600.0f;
     return player;
 }
