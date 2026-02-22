@@ -68,6 +68,14 @@ void handleMovement(Player* player) {
     }
 }
 
+void handleJump(Player* player) {
+    float groundY = (float)GetScreenHeight() - player->height;
+
+    if (IsKeyPressed(KEY_SPACE) && player->y >= groundY) {
+        player->velocityY = -player->jumpStrength;
+    }
+}
+
 void handleGravity(Player* player) {
     float groundY = (float)GetScreenHeight() - player->height;
 
@@ -75,12 +83,16 @@ void handleGravity(Player* player) {
         player->velocityY += gravity * deltaTime;
     } else {
         player->y = groundY;
-        player->velocityY = 0.0f;
+        // Only reset velocity if we are falling into the ground
+        if (player->velocityY > 0) {
+            player->velocityY = 0.0f;
+        }
     }
 }
 
 void updatePlayer(Player* player) {
     handleInput(player);
+    handleJump(player);
     handleGravity(player);
     handleMovement(player);
     displayPlayer(*player);
@@ -97,5 +109,6 @@ Player initPlayer(void) {
     player.acceleration = 2000.0f;
     player.friction = 1500.0f;
     player.maxSpeed = 600.0f;
+    player.jumpStrength = 600.0f;
     return player;
 }
