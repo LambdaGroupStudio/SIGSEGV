@@ -1,4 +1,6 @@
 #include "window.h"
+#include "globals.h"
+#include "player.h"
 
 void initWindow(void) {
     int monitor = GetCurrentMonitor();
@@ -6,14 +8,16 @@ void initWindow(void) {
     int height  = GetMonitorHeight(monitor);
 
     InitWindow(width, height, "SIGSEGV");
-
-    SetTargetFPS(60);
+    ToggleFullscreen(); // For testing purposes, we can remove this later if we want to allow windowed mode
 }
 
 void displayWindow(void) {
+    Player player = initPlayer();
     while (!WindowShouldClose()) {
+        deltaTime = GetFrameTime();
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        updatePlayer(&player);
         EndDrawing();
     }
 }
