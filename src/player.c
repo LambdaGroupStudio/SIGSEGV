@@ -7,29 +7,51 @@ void displayPlayer(Player player) {
 }
 
 void handleInput(Player* player) {
-    float moveInput = 0.0f;
 
-    if (IsKeyDown(KEY_D)) moveInput += 1.0f;
-    if (IsKeyDown(KEY_A)) moveInput -= 1.0f;
+    if (IsKeyDown(KEY_D)) {
 
-    if (moveInput != 0.0f) {
-        if ((moveInput > 0.0f && player->velocityX < 0.0f) ||
-            (moveInput < 0.0f && player->velocityX > 0.0f)) {
+        if (player->velocityX < 0.0f) {
             player->velocityX = 0.0f;
         }
-        player->velocityX += moveInput * player->acceleration * deltaTime;
-    } else {
+
+        player->velocityX += player->acceleration * deltaTime;
+    }
+
+    else if (IsKeyDown(KEY_A)) {
+
+        if (player->velocityX > 0.0f) {
+            player->velocityX = 0.0f;
+        }
+
+        player->velocityX -= player->acceleration * deltaTime;
+    }
+
+    else {
+
         if (player->velocityX > 0.0f) {
             player->velocityX -= player->friction * deltaTime;
-            if (player->velocityX < 0.0f) player->velocityX = 0.0f;
-        } else if (player->velocityX < 0.0f) {
+            if (player->velocityX < 0.0f) {
+                player->velocityX = 0.0f;
+            }
+                
+        }
+        else if (player->velocityX < 0.0f) {
             player->velocityX += player->friction * deltaTime;
-            if (player->velocityX > 0.0f) player->velocityX = 0.0f;
+            if (player->velocityX > 0.0f) {
+                player->velocityX = 0.0f;
+            }
         }
     }
 
-    if (player->velocityX > player->maxSpeed) player->velocityX = player->maxSpeed;
-    if (player->velocityX < -player->maxSpeed) player->velocityX = -player->maxSpeed;
+    // Clamp max speed
+    if (player->velocityX > player->maxSpeed) {
+        player->velocityX = player->maxSpeed;
+    }
+        
+
+    if (player->velocityX < -player->maxSpeed) {
+        player->velocityX = -player->maxSpeed;
+    }
 }
 
 void handleMovement(Player* player) {
