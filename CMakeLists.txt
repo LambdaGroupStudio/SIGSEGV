@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 4.2.1)
+cmake_minimum_required(VERSION 3.28.3)
 
 project(SIGSEGV LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+
+# Apply to all targets, including raylib
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200809L")
 
 include(FetchContent)
 
