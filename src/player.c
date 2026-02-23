@@ -30,36 +30,34 @@ void handleMovement(Player* player) {
     if (player->velocityX < -player->maxSpeed) player->velocityX = -player->maxSpeed;
 }
 
-void handleCollisions(Player* player, Pillar* pillar) {
+void handleCollisions(Player* player, Pillars* pillars) {
     player->isGrounded = false;
     float buffer = 10.0f;
 
     player->x += player->velocityX * deltaTime;
-    if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        if (player->velocityX > 0.0f) player->x = pillar->x - player->width;
-        else if (player->velocityX < 0.0f) player->x = pillar->x + pillar->width;
-        player->velocityX = 0.0f;
+    
+    for (size_t i = 0; i < pillars->count; i++) {
+        Pillar* p = &pillars->items[i];
+        if (isColliding(player->x, player->y, player->width, player->height, p->x, p->y, p->width, p->height)) {
+            if (player->velocityX > 0.0f) player->x = p->x - player->width;
+            else if (player->velocityX < 0.0f) player->x = p->x + p->width;
+            player->velocityX = 0.0f;
+        }
     }
-    /* Side and top screen collisions disabled for testing
-    if (player->x < 0.0f) {
-        player->x = 0.0f;
-        player->velocityX = 0.0f;
-    }
-    if (player->x + player->width > (float)GetScreenWidth()) {
-        player->x = (float)GetScreenWidth() - player->width;
-        player->velocityX = 0.0f;
-    }
-    */
 
     player->y += player->velocityY * deltaTime;
-    if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        if (player->velocityY >= 0.0f) {
-            player->y = pillar->y - (float)player->height;
-            player->isGrounded = true;
-            player->velocityY = 0.0f;
-        } else {
-            player->y = pillar->y + (float)pillar->height;
-            player->velocityY = 0.0f;
+
+    for (size_t i = 0; i < pillars->count; i++) {
+        Pillar* p = &pillars->items[i];
+        if (isColliding(player->x, player->y, player->width, player->height, p->x, p->y, p->width, p->height)) {
+            if (player->velocityY >= 0.0f) {
+                player->y = p->y - (float)player->height;
+                player->isGrounded = true;
+                player->velocityY = 0.0f;
+            } else {
+                player->y = p->y + (float)p->height;
+                player->velocityY = 0.0f;
+            }
         }
     }
 
@@ -68,16 +66,22 @@ void handleCollisions(Player* player, Pillar* pillar) {
         player->y = groundY;
         player->velocityY = 0.0f;
         player->isGrounded = true;
-    } else if (isColliding(player->x, player->y + buffer, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        player->isGrounded = true;
+    } else {
+        // Also check if we are grounded on top of any pillar due to buffer
+        for (size_t i = 0; i < pillars->count; i++) {
+            Pillar* p = &pillars->items[i];
+            if (isColliding(player->x, player->y + buffer, player->width, player->height, p->x, p->y, p->width, p->height)) {
+                player->isGrounded = true;
+                break;
+            }
+        }
     }
 
-    /*
-    if (player->y < 0.0f) {
-        player->y = 0.0f;
-        player->velocityY = 0.0f;
+    // Screen bounds top/bottom Y
+    if (player->y < -1000.0f) { // Some limit to prevent flying away forever
+         player->y = -1000.0f;
+         player->velocityY = 0.0f;
     }
-    */
 }
 
 void handleJump(Player* player) {
@@ -93,8 +97,8 @@ void handleGravity(Player* player) {
     }
 }
 
-void updatePlayer(Player* player, Pillar* pillar) {
-    handleCollisions(player, pillar);
+void updatePlayer(Player* player, Pillars* pillars) {
+    handleCollisions(player, pillars);
     handleMovement(player);
     handleJump(player);
     handleGravity(player);

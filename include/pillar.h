@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 typedef struct Pillar {
     int width;
@@ -7,6 +8,15 @@ typedef struct Pillar {
     float y;
 } Pillar;
 
-extern Pillar initPillar(float width, float height, float x, float y);
-extern void displayPillar(Pillar* pillar);
+typedef struct Pillars {
+    Pillar* items;
+    size_t count;
+    size_t capacity;
+} Pillars;
 
+Pillar initPillar(float width, float height, float x, float y);
+void initPillars(Pillars* pillars);
+void addPillar(Pillars* pillars, Pillar pillar);
+void generatePillars(Pillars* pillars, int count);
+void displayPillars(Pillars* pillars);
+void freePillars(Pillars* pillars);
