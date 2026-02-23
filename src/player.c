@@ -58,14 +58,27 @@ void handleInput(Player* player) {
 void handleMovement(Player* player, Pillar* pillar) {
     player->lastX = player->x;
     player->lastY = player->y;
-    player->x += player->velocityX * deltaTime;
-    player->y += player->velocityY * deltaTime;
 
+    float newX = player->x + player->velocityX * deltaTime;
+    float newY = player->y + player->velocityY * deltaTime;
+
+    player->x = newX;
     if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        // Simple collision response: move the player back to their last position
-        player->x = player->lastX;
-        player->y = player->lastY;
+        if (player->velocityX > 0) {
+            player->x = pillar->x - player->width;
+        } else if (player->velocityX < 0) {
+            player->x = pillar->x + pillar->width;
+        }
         player->velocityX = 0.0f;
+    }
+
+    player->y = newY;
+    if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
+        if (player->velocityY > 0) {
+            player->y = pillar->y - player->height;
+        } else if (player->velocityY < 0) {
+            player->y = pillar->y + pillar->height;
+        }
         player->velocityY = 0.0f;
     }
 
@@ -76,6 +89,14 @@ void handleMovement(Player* player, Pillar* pillar) {
     if (player->x + player->width > (float)GetScreenWidth()) {
         player->x = (float)GetScreenWidth() - player->width;
         player->velocityX = 0.0f;
+    }
+    if (player->y < 0.0f) {
+        player->y = 0.0f;
+        player->velocityY = 0.0f;
+    }
+    if (player->y + player->height > (float)GetScreenHeight()) {
+        player->y = (float)GetScreenHeight() - player->height;
+        player->velocityY = 0.0f;
     }
 }
 
