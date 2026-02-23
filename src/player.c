@@ -40,6 +40,7 @@ void handleCollisions(Player* player, Pillar* pillar) {
         else if (player->velocityX < 0.0f) player->x = pillar->x + pillar->width;
         player->velocityX = 0.0f;
     }
+    /* Side and top screen collisions disabled for testing
     if (player->x < 0.0f) {
         player->x = 0.0f;
         player->velocityX = 0.0f;
@@ -48,6 +49,7 @@ void handleCollisions(Player* player, Pillar* pillar) {
         player->x = (float)GetScreenWidth() - player->width;
         player->velocityX = 0.0f;
     }
+    */
 
     player->y += player->velocityY * deltaTime;
     if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
@@ -70,10 +72,12 @@ void handleCollisions(Player* player, Pillar* pillar) {
         player->isGrounded = true;
     }
 
+    /*
     if (player->y < 0.0f) {
         player->y = 0.0f;
         player->velocityY = 0.0f;
     }
+    */
 }
 
 void handleJump(Player* player) {
