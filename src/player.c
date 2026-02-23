@@ -26,7 +26,6 @@ void handleMovement(Player* player) {
             if (player->velocityX > 0.0f) player->velocityX = 0.0f;
         }
     }
-
     if (player->velocityX > player->maxSpeed) player->velocityX = player->maxSpeed;
     if (player->velocityX < -player->maxSpeed) player->velocityX = -player->maxSpeed;
 }
@@ -36,16 +35,11 @@ void handleCollisions(Player* player, Pillar* pillar) {
     float buffer = 10.0f;
 
     player->x += player->velocityX * deltaTime;
-    
     if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        if (player->velocityX > 0.0f) {
-            player->x = pillar->x - player->width;
-        } else if (player->velocityX < 0.0f) {
-            player->x = pillar->x + pillar->width;
-        }
+        if (player->velocityX > 0.0f) player->x = pillar->x - player->width;
+        else if (player->velocityX < 0.0f) player->x = pillar->x + pillar->width;
         player->velocityX = 0.0f;
     }
-
     if (player->x < 0.0f) {
         player->x = 0.0f;
         player->velocityX = 0.0f;
@@ -56,25 +50,23 @@ void handleCollisions(Player* player, Pillar* pillar) {
     }
 
     player->y += player->velocityY * deltaTime;
-
     if (isColliding(player->x, player->y, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
         if (player->velocityY >= 0.0f) {
             player->y = pillar->y - (float)player->height;
             player->isGrounded = true;
-        } else if (player->velocityY < 0.0f) {
+            player->velocityY = 0.0f;
+        } else {
             player->y = pillar->y + (float)pillar->height;
+            player->velocityY = 0.0f;
         }
-        player->velocityY = 0.0f;
-    }
-
-    if (!player->isGrounded && isColliding(player->x, player->y + buffer, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
-        player->isGrounded = true;
     }
 
     float groundY = (float)GetScreenHeight() - (float)player->height;
-    if (player->y >= groundY - buffer) {
+    if (player->y >= groundY - buffer && player->velocityY >= 0.0f) {
         player->y = groundY;
         player->velocityY = 0.0f;
+        player->isGrounded = true;
+    } else if (isColliding(player->x, player->y + buffer, player->width, player->height, pillar->x, pillar->y, pillar->width, pillar->height)) {
         player->isGrounded = true;
     }
 
@@ -109,8 +101,6 @@ Player initPlayer(void) {
     Player player = {0};
     player.x = 100.0f;
     player.y = 100.0f;
-    player.lastX = player.x;
-    player.lastY = player.y;
     player.width = 100.0f;
     player.height = 100.0f;
     player.velocityX = 0.0f;
