@@ -9,18 +9,29 @@ void initWindow(void) {
     int height  = GetMonitorHeight(monitor);
 
     InitWindow(width, height, "SIGSEGV");
-    ToggleFullscreen(); // For testing purposes, we can remove this later if we want to allow windowed mode
 }
 
 void displayWindow(void) {
     Player player = initPlayer();
     Pillar pillar = initPillar();
+    Camera2D camera = {0};
+    int monitor = GetCurrentMonitor();
+    int screenWidth = GetMonitorWidth(monitor);
+    int screenHeight = GetMonitorHeight(monitor);
+    camera.target = (Vector2){player.x, player.y};
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.rotation = 0.0f;
+    camera.zoom = 0.7f;
     while (!WindowShouldClose()) {
         deltaTime = GetFrameTime();
+        camera.target = (Vector2){player.x + player.width/2.0f, player.y + player.height/2.0f};
+        
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        BeginMode2D(camera);
         updatePlayer(&player, &pillar);
         displayPillar(&pillar);
+        EndMode2D();
         EndDrawing();
     }
 }
