@@ -1,8 +1,12 @@
 #pragma once
+#include <stdbool.h>
+#include "pillar.h"
 
 typedef struct Player {
     float x;
     float y;
+    float lastX;
+    float lastY;
     int width;
     int height;
     float acceleration;
@@ -11,12 +15,13 @@ typedef struct Player {
     float velocityY;
     float maxSpeed;
     float jumpStrength;
+    bool isGrounded;
 } Player;
 
 Player initPlayer(void);
 void displayPlayer(Player player);
-void handleInput(Player* player);
 void handleMovement(Player* player);
+void handleCollisions(Player* player, Pillar* pillar);
 void handleJump(Player* player);
 void handleGravity(Player* player);
-void updatePlayer(Player* player);
+void updatePlayer(Player* player, Pillar* pillar);

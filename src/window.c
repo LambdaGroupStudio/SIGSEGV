@@ -1,6 +1,7 @@
 #include "window.h"
 #include "globals.h"
 #include "player.h"
+#include "pillar.h"
 
 void initWindow(void) {
     int monitor = GetCurrentMonitor();
@@ -13,11 +14,13 @@ void initWindow(void) {
 
 void displayWindow(void) {
     Player player = initPlayer();
+    Pillar pillar = initPillar();
     while (!WindowShouldClose()) {
         deltaTime = GetFrameTime();
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        updatePlayer(&player);
+        updatePlayer(&player, &pillar);
+        displayPillar(&pillar);
         EndDrawing();
     }
 }

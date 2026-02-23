@@ -6,31 +6,27 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-if(UNIX AND NOT APPLE)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
-        _POSIX_C_SOURCE=200809L
-    )
-endif()
-
 include(FetchContent)
 
-# Prevent raylib from building examples/tools
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     raylib
     GIT_REPOSITORY https://github.com/raysan5/raylib.git
-    GIT_TAG 5.0        
+    GIT_TAG 5.0
 )
 
 FetchContent_MakeAvailable(raylib)
 
-file(GLOB_RECURSE SRC_FILES
-    ${CMAKE_SOURCE_DIR}/src/*.c
+add_executable(${PROJECT_NAME}
+    src/main.c
+    src/window.c
+    src/player.c
+    src/pillar.c
+    src/globals.c
+    src/helpers.c
 )
-
-add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -38,7 +34,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
 
-# macOS frameworks (IMPORTANT)
 if(APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE
         "-framework Cocoa"
@@ -48,7 +43,6 @@ if(APPLE)
     )
 endif()
 
-# Compiler warnings
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
