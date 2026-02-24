@@ -46,7 +46,7 @@ void displayWindow(void) {
         BeginMode2D(camera);
         
         updatePlayer(&player, &pillars);
-        updateEnemies(&enemies, &pillars);
+        updateEnemies(&enemies, &pillars, &player);
          
         displayEnemies(&enemies);
         displayPillars(&pillars);
