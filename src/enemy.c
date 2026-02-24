@@ -120,7 +120,7 @@ void enemyJump(Enemy *enemy) {
     }
 }
 
-void moveEnemyTowardsPlayer(Enemy* enemy, Player* player) {
+void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     // Center of enemy and agro box
     float cx = enemy->x + enemy->width / 2.0f;
     float cy = enemy->y + enemy->height / 2.0f;
@@ -180,6 +180,48 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player) {
         // Friction when not chased
         enemy->velocityX *= 0.9f;
         if (fabsf(enemy->velocityX) < 1.0f) enemy->velocityX = 0.0f;
+    }
+
+    // Prevent enemies from getting stuck on a wall by making them jump
+    if (enemy->velocityX != 0.0f && enemy->isGrounded) {
+        float nextX = enemy->x + enemy->velocityX * deltaTime;
+        for (size_t i = 0; i < pillars->count; i++) {
+            Pillar* p = &pillars->items[i];
+            if (isColliding(nextX, enemy->y, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
+                enemyJump(enemy);
+                break; 
+            }
+        }
+    }
+
+    // Prevent enmies from walking off edges and getting stuck between pillars
+    if (enemy->isGrounded) {
+        float nextX = enemy->x + enemy->velocityX * deltaTime;
+        bool willBeGrounded = false;
+        for (size_t i = 0; i < pillars->count; i++) {
+            Pillar* p = &pillars->items[i];
+            if (isColliding(nextX, enemy->y + 1.0f, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
+                willBeGrounded = true;
+                break;
+            }
+        }
+        if (!willBeGrounded) {
+            enemyJump(enemy);
+        } else {
+            // A very dumb way to prevent them from getting stuck in between pillars
+            for (size_t i = 0; i < pillars->count; i++) {
+                Pillar* p = &pillars->items[i];
+                if (isColliding(nextX, enemy->y, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
+                    if (enemy->velocityX > 0.0f) {
+                        enemy->x = p->x - enemy->width;
+                    } else if (enemy->velocityX < 0.0f) {
+                        enemy->x = p->x + p->width;
+                    }
+                    enemy->velocityX = 0.0f;
+                    break;
+                }
+            }
+        }
     }
 }
    
@@ -244,7 +286,7 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
 void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player) {
     for (size_t i = 0; i < enemies->count; i++) {
         Enemy* e = &enemies->items[i];
-        moveEnemyTowardsPlayer(e, player);
+        moveEnemyTowardsPlayer(e, player, pillars);
         handleEnemyGravity(e);
         handleEnemyCollisions(e, pillars);
     }

@@ -37,7 +37,7 @@ void freeEnemy(Enemies* enemies, int id);
 
 void updateEnemies(Enemies* enemies, Pillars* pillars, Player* player);
 
-void moveEnemyTowardsPlayer(Enemy* enemy, Player* player);
+void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars);
 void enemyJump(Enemy* enemy);
 void handleEnemyCollisions(Enemy* enemy, Pillars* pillars);
 void handleEnemyGravity(Enemy* enemy);
