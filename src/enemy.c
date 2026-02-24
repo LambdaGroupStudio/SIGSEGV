@@ -185,11 +185,6 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
             }
         }
 
-        // Jump if player is significantly higher and we are grounded
-        if (player->y < enemy->y + 200.0f && enemy->isGrounded) {
-            enemyJump(enemy);
-        }
-        
         // Clamp speed
         if (enemy->velocityX > enemy->maxSpeed) enemy->velocityX = enemy->maxSpeed;
         if (enemy->velocityX < -enemy->maxSpeed) enemy->velocityX = -enemy->maxSpeed;
