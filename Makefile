@@ -1,6 +1,6 @@
 BUILD_DIR := bin
 GENERATOR := Ninja
-VERSION := 3.28.3
+VERSION := 4.2.1
 
 .PHONY: build build-clean clean configure
 
