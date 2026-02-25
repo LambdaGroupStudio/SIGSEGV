@@ -36,8 +36,8 @@ void handlePlayerCollisions(Player* player, Pillars* pillars) {
 
     player->x += player->velocityX * deltaTime;
     
-    for (size_t i = 0; i < pillars->count; i++) {
-        Pillar* p = &pillars->items[i];
+    for (size_t i = 0; i < pillars->size; i++) {
+        const Pillar* p = dyn_arr_get(pillars, i);
         if (isColliding(player->x, player->y, player->width, player->height, p->x, p->y, p->width, p->height)) {
             if (player->velocityX > 0.0f) player->x = p->x - player->width;
             else if (player->velocityX < 0.0f) player->x = p->x + p->width;
@@ -47,8 +47,8 @@ void handlePlayerCollisions(Player* player, Pillars* pillars) {
 
     player->y += player->velocityY * deltaTime;
 
-    for (size_t i = 0; i < pillars->count; i++) {
-        Pillar* p = &pillars->items[i];
+    for (size_t i = 0; i < pillars->size; i++) {
+        const Pillar* p = dyn_arr_get(pillars, i);
         if (isColliding(player->x, player->y, player->width, player->height, p->x, p->y, p->width, p->height)) {
             if (player->velocityY >= 0.0f) {
                 player->y = p->y - (float)player->height;
@@ -68,8 +68,8 @@ void handlePlayerCollisions(Player* player, Pillars* pillars) {
         player->isGrounded = true;
     } else {
         // Also check if we are grounded on top of any pillar due to buffer
-        for (size_t i = 0; i < pillars->count; i++) {
-            Pillar* p = &pillars->items[i];
+        for (size_t i = 0; i < pillars->size; i++) {
+            const Pillar* p = dyn_arr_get(pillars, i);
             if (isColliding(player->x, player->y + buffer, player->width, player->height, p->x, p->y, p->width, p->height)) {
                 player->isGrounded = true;
                 break;

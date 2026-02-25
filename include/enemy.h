@@ -1,6 +1,6 @@
 #pragma once
-#include <stdlib.h>
-#include <stdbool.h>
+
+#include "utils/array.h"
 #include "pillar.h"
 #include "player.h"
 
@@ -21,15 +21,11 @@ typedef struct Enemy {
     enum {MELEE = 0, RANGED = 1} type;
 } Enemy;
 
-typedef struct Enemies {
-    Enemy* items;
-    size_t count;
-    size_t capacity;
-} Enemies;
+typedef dyn_arr(Enemy) Enemies;
 
 Enemy initEnemy(float x, float y, float speed, int width, int height, int type, int id, int agroRangeBoxWidth, int agroRangeBoxHeight, bool isGrounded, float acceleration, float maxSpeed);
 void initEnemies(Enemies* enemies);
-void addEnemy(Enemies* enemies, Enemy enemy);
+void addEnemy(Enemies* enemies, Enemy* enemy);
 void generateEnemies(Enemies* enemies, Pillars* pillars);
 void displayEnemies(Enemies* enemies);
 void freeEnemies(Enemies* enemies);

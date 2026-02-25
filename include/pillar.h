@@ -1,4 +1,6 @@
 #pragma once
+
+#include "utils/array.h"
 #include <stddef.h>
 
 typedef struct Pillar {
@@ -8,15 +10,11 @@ typedef struct Pillar {
     float y;
 } Pillar;
 
-typedef struct Pillars {
-    Pillar* items;
-    size_t count;
-    size_t capacity;
-} Pillars;
+typedef dyn_arr(Pillar) Pillars;
 
 Pillar initPillar(float width, float height, float x, float y);
 void initPillars(Pillars* pillars);
-void addPillar(Pillars* pillars, Pillar pillar);
+void addPillar(Pillars* pillars, Pillar* pillar);
 void generatePillars(Pillars* pillars, int count);
 void displayPillars(Pillars* pillars);
 void freePillars(Pillars* pillars);

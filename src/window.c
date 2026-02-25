@@ -23,9 +23,11 @@ void displayWindow(void) {
     initPillars(&pillars);
     Enemies enemies;
     initEnemies(&enemies);
+
+    Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
     
     // Add starting pillar
-    addPillar(&pillars, initPillar(850.0f, 850.0f, -200.0f, 500.0f));
+    addPillar(&pillars, &initialPillar);
     
     generatePillars(&pillars, 60);
     

@@ -38,22 +38,17 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
 }
 
 void initEnemies(Enemies* enemies) {
-    enemies->count = 0;
-    enemies->capacity = 10;
-    enemies->items = malloc(sizeof(Enemy) * enemies->capacity);
+  *enemies = dyn_arr_create(sizeof(Enemy));
 }
 
-void addEnemy(Enemies* enemies, Enemy enemy) {
-    if (enemies->count >= enemies->capacity) {
-        enemies->capacity *= 2;
-        enemies->items = realloc(enemies->items, sizeof(Enemy) * enemies->capacity);
-    }
-    enemies->items[enemies->count++] = enemy;
+void addEnemy(Enemies* enemies, Enemy* enemy) {
+  dyn_arr_push_back(enemies, enemy);
 }
 
 void generateEnemies(Enemies* enemies, Pillars* pillars) {
     int totalSpawns = 0;
-    for (size_t i = 0; i < pillars->count; i++) {
+    for (size_t i = 0; i < pillars->size; i++) {
+        const Pillar* p = dyn_arr_get(pillars, i);
         if (i >= 2) { // Start spawning enemies after the first few pillars to give player some breathing room
             float randomChance = (float)GetRandomValue(0, 100) / 100.0f;
             
@@ -62,11 +57,11 @@ void generateEnemies(Enemies* enemies, Pillars* pillars) {
             }
 
             float x = (float)GetRandomValue(
-                (int)pillars->items[i].x,
-                (int)(pillars->items[i].x + pillars->items[i].width - 50)
+                (int)p->x,
+                (int)(p->x + p->width - 50)
             );
 
-            float y = pillars->items[i].y - 100.0f; 
+            float y = p->y - 100.0f; 
             int type = GetRandomValue(0, 1);
             
             // Basic stats for AI
@@ -88,19 +83,19 @@ void generateEnemies(Enemies* enemies, Pillars* pillars) {
             }
 
             Enemy newEnemy = initEnemy(x, y, 100.0f, 50, 50, type, i, agroWidth, agroHeight, false, acceleration, maxSpeed);
-            addEnemy(enemies, newEnemy);
+            addEnemy(enemies, &newEnemy);
             totalSpawns++;
         } else {
             // Debug: Log that we're skipping enemy spawn for this pillar
-            printf("DEBUG: Skipping enemy spawn for pillar %zu at x=%.2f due to initial safe zone\n", i, pillars->items[i].x);
+            printf("DEBUG: Skipping enemy spawn for pillar %zu at x=%.2f due to initial safe zone\n", i, p->x);
         }
     }
-    printf("DEBUG: Generated %d enemies on %zu pillars\n", totalSpawns, pillars->count);
+    printf("DEBUG: Generated %d enemies on %zu pillars\n", totalSpawns, pillars->size);
 }
 
 void displayEnemies(Enemies* enemies) {
-    for (size_t i = 0; i < enemies->count; i++) {
-        Enemy* e = &enemies->items[i];
+    for (size_t i = 0; i < enemies->size; i++) {
+        Enemy* e = dyn_arr_get(enemies, i);
         Color color = (e->type == 0) ? BLUE : GREEN;
         DrawRectangle((int)e->x, (int)e->y, e->width, e->height, color);
         
@@ -112,20 +107,15 @@ void displayEnemies(Enemies* enemies) {
 }
 
 void freeEnemies(Enemies* enemies) {
-    if (enemies->items) {
-        free(enemies->items);
-        enemies->items = NULL;
-    }
-    enemies->count = 0;
-    enemies->capacity = 0;
+  dyn_arr_free(enemies);
 }
 
 void freeEnemy(Enemies *enemies, int id) {
-    for (size_t i = 0; i < enemies->count; i++) {
-        if (enemies->items[i].id == id) {
-            enemies->items[i] = enemies->items[enemies->count - 1];
-            enemies->count--;
-            break;
+    for (size_t i = 0; i < enemies->size; i++) {
+        Enemy* e = dyn_arr_get(enemies, i);
+        if (e->id == id) {
+            dyn_arr_pop_at(enemies, i);
+            return;
         }
     }
 }
@@ -197,8 +187,8 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     // Prevent enemies from getting stuck on a wall by making them jump
     if (enemy->velocityX != 0.0f && enemy->isGrounded) {
         float nextX = enemy->x + enemy->velocityX * deltaTime;
-        for (size_t i = 0; i < pillars->count; i++) {
-            Pillar* p = &pillars->items[i];
+        for (size_t i = 0; i < pillars->size; i++) {
+            const Pillar* p = dyn_arr_get(pillars, i);
             if (isColliding(nextX, enemy->y, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
                 enemyJump(enemy);
                 break; 
@@ -217,8 +207,8 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
             float probeY = enemy->y + (float)enemy->height + 5.0f; // Just below feet
             
             bool groundAhead = false;
-            for (size_t i = 0; i < pillars->count; i++) {
-                Pillar* p = &pillars->items[i];
+            for (size_t i = 0; i < pillars->size; i++) {
+                const Pillar* p = dyn_arr_get(pillars, i);
                 if (probeX >= p->x && probeX <= p->x + p->width &&
                     probeY >= p->y && probeY <= p->y + p->height) {
                     groundAhead = true;
@@ -230,8 +220,8 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
                 bool targetFound = false;
                 float jumpTargetRelativeX = direction * 500.0f; // Maximum jump look-ahead
                 
-                for (size_t i = 0; i < pillars->count; i++) {
-                    Pillar* p = &pillars->items[i];
+                for (size_t i = 0; i < pillars->size; i++) {
+                    const Pillar* p = dyn_arr_get(pillars, i);
                     // Check if there's a pillar at our height or slightly lower within jump range
                     if (enemy->x + jumpTargetRelativeX >= p->x && enemy->x + jumpTargetRelativeX <= p->x + p->width &&
                         enemy->y + enemy->height >= p->y - 100.0f && enemy->y + enemy->height <= p->y + 500.0f) {
@@ -247,8 +237,8 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
                     enemy->velocityX = 0.0f;
                     
                     // Snap to the absolute edge of the current pillar to prevent "hanging"
-                    for (size_t i = 0; i < pillars->count; i++) {
-                        Pillar* p = &pillars->items[i];
+                    for (size_t i = 0; i < pillars->size; i++) {
+                        const Pillar* p = dyn_arr_get(pillars, i);
                         if (isColliding(enemy->x, enemy->y + 1.0f, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
                             if (direction > 0.0f) {
                                 enemy->x = p->x + p->width - (float)enemy->width;
@@ -277,8 +267,8 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
 
     // Horizontal
     enemy->x += enemy->velocityX * deltaTime;
-    for (size_t i = 0; i < pillars->count; i++) {
-        Pillar* p = &pillars->items[i];
+    for (size_t i = 0; i < pillars->size; i++) {
+        const Pillar* p = dyn_arr_get(pillars, i);
         if (isColliding(enemy->x, enemy->y, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
             if (enemy->velocityX > 0.0f) enemy->x = p->x - enemy->width;
             else if (enemy->velocityX < 0.0f) enemy->x = p->x + p->width;
@@ -288,8 +278,8 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
 
     // Vertical
     enemy->y += enemy->velocityY * deltaTime;
-    for (size_t i = 0; i < pillars->count; i++) {
-        Pillar* p = &pillars->items[i];
+    for (size_t i = 0; i < pillars->size; i++) {
+        const Pillar* p = dyn_arr_get(pillars, i);
         if (isColliding(enemy->x, enemy->y, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
             if (enemy->velocityY >= 0.0f) {
                 enemy->y = p->y - (float)enemy->height;
@@ -304,8 +294,8 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
 
     // Ground buffer check
     if (!enemy->isGrounded) {
-        for (size_t i = 0; i < pillars->count; i++) {
-            Pillar* p = &pillars->items[i];
+        for (size_t i = 0; i < pillars->size; i++) {
+            const Pillar* p = dyn_arr_get(pillars, i);
             if (isColliding(enemy->x, enemy->y + buffer, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
                 enemy->isGrounded = true;
                 break;
@@ -323,8 +313,8 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
 }
 
 void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player) {
-    for (size_t i = 0; i < enemies->count; i++) {
-        Enemy* e = &enemies->items[i];
+    for (size_t i = 0; i < enemies->size; i++) {
+        Enemy* e = dyn_arr_get(enemies, i);
         moveEnemyTowardsPlayer(e, player, pillars);
         handleEnemyGravity(e);
         handleEnemyCollisions(e, pillars);
