@@ -312,6 +312,52 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
     }
 }
 
+RangedEnemyBullet initEnemyBullet(float x. float y, float velocityX, float velocityY, float targetX, float targetY, float speed) {
+    RangedEnemyBullet bullet;
+    bullet.x = x;
+    bullet.y = y;
+    bullet.velocityX = velocityX;
+    bullet.velocityY = velocityY;
+    bullet.targetX = targetX;
+    bullet.targetY = targetY;
+    bullet.speed = speed;
+    return RangedEnemyBullet;
+
+}
+
+void initRangedEnemyBullets(RangedEnemyBullets *bullets, RangedEnemyBullet bullet*) {
+    *bullets = dyn_arr_create(bullets, bullet)
+}
+
+void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
+    RangedEnemyBullet bullet = initRangedEnemyBullets;
+    bullet.x = Enemy.x;
+    bullet.y = Enemy.y;
+    bullet.targetX = player.x;
+    bullet.targetY = player.y;
+    
+    float dx = player.x - bullet.x;
+    float dy = player.y - bullet.y;
+
+    float dist = sqrt(dx * dx + dy * dy);
+
+    float vx = dx / dist * bullet.speed;
+    float vy = dy / dist * bullet.speed;
+
+    bullet.velocityX = dx;
+    bullet.velocityY = dy;
+    
+    dyn_arr_push_back(bullets, bullet);
+}
+
+void updateBullets(RangedEnemyBullets* bullets) {
+    for (size_t i = 0; i < bullets->size; i++) {
+        RangedEnemyBullet* b = dyn_arr_get(bullets, i);
+        b->x += b->velocityX;
+        b->y += b->velocityY;
+    }
+}
+
 void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);

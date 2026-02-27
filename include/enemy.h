@@ -21,7 +21,18 @@ typedef struct Enemy {
     enum {MELEE = 0, RANGED = 1} type;
 } Enemy;
 
+typedef struct RangedEnemyBullet {
+    float x;
+    float y;
+    float velocityX;
+    float velocityY;
+    float targetX;
+    float targetY;
+    float speed;
+} RangedEnemyBullet;
+
 typedef dyn_arr(Enemy) Enemies;
+typedef dyn_arr(RangedEnemyBullet) RangedEnemyBullets; 
 
 Enemy initEnemy(float x, float y, float speed, int width, int height, int type, int id, int agroRangeBoxWidth, int agroRangeBoxHeight, bool isGrounded, float acceleration, float maxSpeed);
 void initEnemies(Enemies* enemies);
@@ -37,3 +48,9 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars);
 void enemyJump(Enemy* enemy);
 void handleEnemyCollisions(Enemy* enemy, Pillars* pillars);
 void handleEnemyGravity(Enemy* enemy);
+void enemyShoot(Enemy* enemy, RangedEnemyBullets bullets, Player* player);
+
+RangedEnemyBullet initEnemyBullet(float x, float y, float velocityX, float velocityY, float targetX, float targetY, float speed);
+void initRangedEnemyBullets(RangedEnemyBullets* bullets);
+void updateBullets(RangedEnemyBullets* bullets);
+
