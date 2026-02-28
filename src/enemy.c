@@ -78,12 +78,12 @@ void generateEnemies(Enemies* enemies, Pillars* pillars) {
             if (type == 0) { // MELEE
                 acceleration = 2500.0f;
                 maxSpeed = 600.0f;
-                agroWidth = 1200; // Wide enough to cover most of the screen horizontally, but not too wide to be unfair
+                agroWidth = 1800; // Wide enough to cover most of the screen horizontally, but not too wide to be unfair
                 agroHeight = 1600; // Tall enough to cover vertical space, but not too tall to be unfair
             } else if (type == 1) { // RANGED
                 acceleration = 2000.0f;
                 maxSpeed = 400.0f;
-                agroWidth = 1200; // Ranged enemies have larger agro range to compensate for not chasing as aggressively
+                agroWidth = 1500; // Ranged enemies have larger agro range to compensate for not chasing as aggressively
                 agroHeight = 2000;
                 reloadSpeed = 1.5f; // Ranged enemies shoot every 1.5 seconds
             }
@@ -342,7 +342,7 @@ void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
     bullet.y = enemy->y;
     bullet.targetX = player->x;
     bullet.targetY = player->y;
-    bullet.speed = 10.0f;
+    bullet.speed = 1.0f; // Slow for testing, will be increased later
     
     float dx = player->x - bullet.x;
     float dy = player->y - bullet.y;
