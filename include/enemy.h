@@ -15,6 +15,8 @@ typedef struct Enemy {
   float speed;
   float reloadSpeed;
   float reloadTimer;
+  float groundedTime;
+  float jumpCooldown;
   int width;
   int height;
   int id;
@@ -50,6 +52,7 @@ void freeEnemy(Enemies *enemies, int id);
 
 void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets);
 
+bool canEnemyJumpToPillar(const Enemy* enemy, const Pillar* p, float gravity, float direction);
 void moveEnemyTowardsPlayer(Enemy *enemy, Player *player, Pillars *pillars);
 void enemyJump(Enemy *enemy);
 void handleEnemyCollisions(Enemy *enemy, Pillars *pillars);
