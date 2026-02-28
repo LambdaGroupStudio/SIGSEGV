@@ -362,7 +362,7 @@ void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
     if (player->x < enemy->x) enemy->direction = LEFT;
     else if (player->x > enemy->x) enemy->direction = RIGHT;
 
-    bullet.speed = 1.0f; // Slow for testing, will be increased later
+    bullet.speed = ENEMY_BULLET_SPEED;
     
     float dx = player->x - bullet.x;
     float dy = player->y - bullet.y;
@@ -386,7 +386,7 @@ void updateBullets(RangedEnemyBullets* bullets) {
         RangedEnemyBullet* b = dyn_arr_get(bullets, i);
         b->x += b->velocityX;
         b->y += b->velocityY;
-        DrawRectangle((int)b->x, (int)b->y, 20, 20, YELLOW); // Dont worry about the magic number they a re temporary
+        DrawRectangle((int)b->x, (int)b->y, (int)ENEMY_BULLET_SIZE, (int)ENEMY_BULLET_SIZE, YELLOW); 
     }
 }
 

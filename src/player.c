@@ -96,25 +96,25 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
             float dirY = dy / dist;
 
             if (player->weapon == AR) {
-                float speed = 1500.0f;
+                float speed = PLAYER_AR_SPEED;
                 PlayerARBullet bullet = initPlayerARBullet(px, py, dirX * speed, dirY * speed);
                 dyn_arr_push_back(arBullets, &bullet);
-                player->reloadTimer = 0.1f; // Fast fire rate
+                player->reloadTimer = PLAYER_AR_RELOAD; // Fast fire rate
             } else if (player->weapon == SHOTGUN) {
-                float speed = 1200.0f;
-                int pelletCount = 8;
-                float spread = 0.2f;
+                float speed = PLAYER_SHOTGUN_SPEED;
+                int pelletCount = PLAYER_SHOTGUN_PELLET_COUNT;
+                float spread = PLAYER_SHOTGUN_SPREAD;
                 for (int i = 0; i < pelletCount; i++) {
                     float angle = atan2f(dirY, dirX) + ((float)rand() / (float)RAND_MAX - 0.5f) * spread;
                     PlayerShotgunPellet pellet = initPlayerShotgunPellet(px, py, cosf(angle) * speed, sinf(angle) * speed);
                     dyn_arr_push_back(shotgunPellets, &pellet);
                 }
-                player->reloadTimer = 0.8f; // Slow fire rate
+                player->reloadTimer = PLAYER_SHOTGUN_RELOAD; // Slow fire rate
             } else if (player->weapon == ROCKET_LAUNCHER) {
-                float speed = 800.0f;
+                float speed = PLAYER_ROCKET_SPEED;
                 PlayerRocket rocket = initPlayerRocket(px, py, dirX * speed, dirY * speed);
                 dyn_arr_push_back(rockets, &rocket);
-                player->reloadTimer = 1.5f; // Very slow fire rate
+                player->reloadTimer = PLAYER_ROCKET_RELOAD; // Very slow fire rate
             }
         }
     }
@@ -126,7 +126,8 @@ void updatePlayerARBullets(PlayerARBullets* bullets) {
         b->x += b->velocityX * deltaTime;
         b->y += b->velocityY * deltaTime;
         
-        if (b->x < -5000 || b->x > 5000 || b->y < -5000 || b->y > 5000) {
+        if (b->x < -PROJECTILE_CLEANUP_THRESHOLD || b->x > PROJECTILE_CLEANUP_THRESHOLD || 
+            b->y < -PROJECTILE_CLEANUP_THRESHOLD || b->y > PROJECTILE_CLEANUP_THRESHOLD) {
             dyn_arr_pop_at(bullets, i);
             i--;
         }
@@ -136,7 +137,7 @@ void updatePlayerARBullets(PlayerARBullets* bullets) {
 void displayPlayerARBullets(PlayerARBullets* bullets) {
     for (size_t i = 0; i < bullets->size; i++) {
         PlayerARBullet* b = dyn_arr_get(bullets, i);
-        DrawCircle((int)b->x, (int)b->y, 3, YELLOW);
+        DrawCircle((int)b->x, (int)b->y, (int)PLAYER_AR_BULLET_SIZE, YELLOW);
     }
 }
 
@@ -150,7 +151,8 @@ void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets) {
         p->x += p->velocityX * deltaTime;
         p->y += p->velocityY * deltaTime;
 
-        if (p->x < -5000 || p->x > 5000 || p->y < -5000 || p->y > 5000) {
+        if (p->x < -PROJECTILE_CLEANUP_THRESHOLD || p->x > PROJECTILE_CLEANUP_THRESHOLD || 
+            p->y < -PROJECTILE_CLEANUP_THRESHOLD || p->y > PROJECTILE_CLEANUP_THRESHOLD) {
             dyn_arr_pop_at(pellets, i);
             i--;
         }
@@ -160,7 +162,7 @@ void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets) {
 void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets) {
     for (size_t i = 0; i < pellets->size; i++) {
         PlayerShotgunPellet* p = dyn_arr_get(pellets, i);
-        DrawCircle((int)p->x, (int)p->y, 2, GRAY);
+        DrawCircle((int)p->x, (int)p->y, (int)PLAYER_SHOTGUN_PELLET_SIZE, GRAY);
     }
 }
 
@@ -174,7 +176,8 @@ void updatePlayerRockets(PlayerRockets* rockets) {
         r->x += r->velocityX * deltaTime;
         r->y += r->velocityY * deltaTime;
 
-        if (r->x < -5000 || r->x > 5000 || r->y < -5000 || r->y > 5000) {
+        if (r->x < -PROJECTILE_CLEANUP_THRESHOLD || r->x > PROJECTILE_CLEANUP_THRESHOLD || 
+            r->y < -PROJECTILE_CLEANUP_THRESHOLD || r->y > PROJECTILE_CLEANUP_THRESHOLD) {
             dyn_arr_pop_at(rockets, i);
             i--;
         }
@@ -184,7 +187,9 @@ void updatePlayerRockets(PlayerRockets* rockets) {
 void displayPlayerRockets(PlayerRockets* rockets) {
     for (size_t i = 0; i < rockets->size; i++) {
         PlayerRocket* r = dyn_arr_get(rockets, i);
-        DrawRectangle((int)r->x - 10, (int)r->y - 5, 20, 10, RED);
+        DrawRectangle((int)r->x - (int)(PLAYER_ROCKET_SIZE / 2.0f), 
+                      (int)r->y - (int)(PLAYER_ROCKET_SIZE / 2.0f), 
+                      (int)PLAYER_ROCKET_SIZE, (int)PLAYER_ROCKET_SIZE, RED);
     }
 }
 
