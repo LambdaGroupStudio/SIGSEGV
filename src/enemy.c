@@ -394,7 +394,59 @@ void freeRangedEnemyBullets(RangedEnemyBullets *bullets) {
     dyn_arr_free(bullets);
 }
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets) {
+MeleeEnemyAttack initMeleeEnemyAttack(float x, float y, float width, float height) {
+    MeleeEnemyAttack attack;
+    attack.x = x;
+    attack.y = y;
+    attack.width = width;
+    attack.height = height;
+    attack.duration = 0.5f; // Attack hitbox lasts for 0.5 seconds
+    attack.timer = 0.0f;
+    return attack;
+}
+
+void initMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    *attacks = dyn_arr_create(sizeof(MeleeEnemyAttack));
+}
+
+void freeMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    dyn_arr_free(attacks);
+}
+
+void meleeEnemyAttack(Enemy *enemy, MeleeEnemyAttacks *attacks) {
+    if (enemy->reloadTimer > 0) return;
+    if (enemy->direction == IDLE) return;
+    
+    if (enemy->direction == LEFT) {
+        MeleeEnemyAttack attack = initMeleeEnemyAttack(enemy->x - 100.0f, enemy->y, 100.0f, (float)enemy->height);
+        dyn_arr_push_back(attacks, &attack);
+    } else if (enemy->direction == RIGHT) {
+        MeleeEnemyAttack attack = initMeleeEnemyAttack(enemy->x + (float)enemy->width, enemy->y, 100.0f, (float)enemy->height);
+        dyn_arr_push_back(attacks, &attack);
+    }
+    enemy->reloadTimer = enemy->reloadSpeed;
+}
+
+void updateMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    for (size_t i = 0; i < attacks->size; i++) {
+        MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
+        a->timer += deltaTime;
+        if (a->timer >= a->duration) {
+            dyn_arr_pop_at(attacks, i);
+            i--; // Adjust index after removal
+        }
+    }
+}
+
+void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    for (size_t i = 0; i < attacks->size; i++) {
+        MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
+        // Draw a semi-transparent red rectangle for the attack hitbox
+        DrawRectangleV((Vector2){a->x, a->y}, (Vector2){a->width, a->height}, Fade(RED, 0.4f));
+    }
+}
+
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);
 
@@ -421,6 +473,12 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
                             player->width, player->height)) {
 
                 enemyShoot(e, bullets, player);
+            }
+        } else if (e->type == MELEE) {
+            float attackRange = 50.0f; // Melee attack range
+            if (isColliding(e->x - attackRange, e->y, e->width + 2 * attackRange, e->height,
+                            player->x, player->y, player->width, player->height)) {
+                meleeEnemyAttack(e, attacks);
             }
         }
     }

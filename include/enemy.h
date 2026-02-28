@@ -59,7 +59,7 @@ void displayEnemies(Enemies *enemies);
 void freeEnemies(Enemies *enemies);
 void freeEnemy(Enemies *enemies, int id);
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets);
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks);
 
 void moveEnemyTowardsPlayer(Enemy *enemy, Player *player, Pillars *pillars);
 void enemyJump(Enemy *enemy);
@@ -75,3 +75,6 @@ MeleeEnemyAttack initMeleeEnemyAttack(float x, float y, float width, float heigh
 void initMeleeEnemyAttacks(MeleeEnemyAttacks *attacks);
 
 void updateBullets(RangedEnemyBullets *bullets);
+void updateMeleeEnemyAttacks(MeleeEnemyAttacks *attacks);
+void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks);
+void freeMeleeEnemyAttacks(MeleeEnemyAttacks *attacks);
