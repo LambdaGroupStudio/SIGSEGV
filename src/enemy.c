@@ -39,6 +39,7 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
     enemy.groundedTime = 0.0f;
     enemy.jumpCooldown = 0.0f;
     enemy.isFleeing = isFleeing;
+    enemy.direction = IDLE;
     return enemy;
 }
 
@@ -248,20 +249,27 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
             // Melee ALWAYS chases within agro box
             if (player->x < enemy->x) {
                 enemy->velocityX -= enemy->acceleration * deltaTime;
+                enemy->direction = LEFT;
             } else if (player->x > enemy->x) {
                 enemy->velocityX += enemy->acceleration * deltaTime;
+                enemy->direction = RIGHT;
             }
         } else if (enemy->type == RANGED) {
             if (enemy->isFleeing) {
                 // Ranged flees within inner agro box
                 if (player->x < enemy->x) {
                     enemy->velocityX += enemy->acceleration * deltaTime;
+                    enemy->direction = RIGHT;
                 } else if (player->x > enemy->x) {
                     enemy->velocityX -= enemy->acceleration * deltaTime;
+                    enemy->direction = LEFT;
                 }
             } else {
                 // Ranged stays still / "don't fight"
                 enemy->velocityX *= 0.9f;
+                // Keep current direction or IDLE? Ranged usually face the player.
+                // We'll update it in enemyShoot anyway.
+                if (fabsf(enemy->velocityX) < 1.0f) enemy->direction = IDLE;
             }
         }
 
@@ -271,7 +279,10 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     } else {
         // Friction when not chased
         enemy->velocityX *= 0.9f;
-        if (fabsf(enemy->velocityX) < 1.0f) enemy->velocityX = 0.0f;
+        if (fabsf(enemy->velocityX) < 1.0f) {
+            enemy->velocityX = 0.0f;
+            enemy->direction = IDLE;
+        }
     }
 
     // Prevent enemies from getting stuck on a wall by making them jump
@@ -365,6 +376,7 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
             if (enemy->velocityX > 0.0f) enemy->x = p->x - enemy->width;
             else if (enemy->velocityX < 0.0f) enemy->x = p->x + p->width;
             enemy->velocityX = 0.0f;
+            enemy->direction = IDLE; // Stop moving if we hit a wall
         }
     }
 
@@ -433,6 +445,11 @@ void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
     bullet.y = enemy->y;
     bullet.targetX = player->x;
     bullet.targetY = player->y;
+    
+    // Face the player when shooting
+    if (player->x < enemy->x) enemy->direction = LEFT;
+    else if (player->x > enemy->x) enemy->direction = RIGHT;
+
     bullet.speed = 1.0f; // Slow for testing, will be increased later
     
     float dx = player->x - bullet.x;
@@ -465,7 +482,59 @@ void freeRangedEnemyBullets(RangedEnemyBullets *bullets) {
     dyn_arr_free(bullets);
 }
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets) {
+MeleeEnemyAttack initMeleeEnemyAttack(float x, float y, float width, float height) {
+    MeleeEnemyAttack attack;
+    attack.x = x;
+    attack.y = y;
+    attack.width = width;
+    attack.height = height;
+    attack.duration = 0.5f; // Attack hitbox lasts for 0.5 seconds
+    attack.timer = 0.0f;
+    return attack;
+}
+
+void initMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    *attacks = dyn_arr_create(sizeof(MeleeEnemyAttack));
+}
+
+void freeMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    dyn_arr_free(attacks);
+}
+
+void meleeEnemyAttack(Enemy *enemy, MeleeEnemyAttacks *attacks) {
+    if (enemy->reloadTimer > 0) return;
+    if (enemy->direction == IDLE) return;
+    
+    if (enemy->direction == LEFT) {
+        MeleeEnemyAttack attack = initMeleeEnemyAttack(enemy->x - 100.0f, enemy->y, 100.0f, (float)enemy->height);
+        dyn_arr_push_back(attacks, &attack);
+    } else if (enemy->direction == RIGHT) {
+        MeleeEnemyAttack attack = initMeleeEnemyAttack(enemy->x + (float)enemy->width, enemy->y, 100.0f, (float)enemy->height);
+        dyn_arr_push_back(attacks, &attack);
+    }
+    enemy->reloadTimer = enemy->reloadSpeed;
+}
+
+void updateMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    for (size_t i = 0; i < attacks->size; i++) {
+        MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
+        a->timer += deltaTime;
+        if (a->timer >= a->duration) {
+            dyn_arr_pop_at(attacks, i);
+            i--; // Adjust index after removal
+        }
+    }
+}
+
+void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
+    for (size_t i = 0; i < attacks->size; i++) {
+        MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
+        // Draw a semi-transparent red rectangle for the attack hitbox
+        DrawRectangleV((Vector2){a->x, a->y}, (Vector2){a->width, a->height}, Fade(RED, 0.4f));
+    }
+}
+
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);
 
@@ -496,6 +565,12 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
                             player->width, player->height)) {
 
                 enemyShoot(e, bullets, player);
+            }
+        } else if (e->type == MELEE) {
+            float attackRange = 50.0f; // Melee attack range
+            if (isColliding(e->x - attackRange, e->y, e->width + 2 * attackRange, e->height,
+                            player->x, player->y, player->width, player->height)) {
+                meleeEnemyAttack(e, attacks);
             }
         }
     }

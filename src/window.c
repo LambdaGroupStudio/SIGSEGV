@@ -26,6 +26,8 @@ void displayWindow(void) {
     initEnemies(&enemies);
     RangedEnemyBullets bullets;
     initRangedEnemyBullets(&bullets);
+    MeleeEnemyAttacks attacks;
+    initMeleeEnemyAttacks(&attacks);
 
     Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
     
@@ -54,14 +56,16 @@ void displayWindow(void) {
         BeginMode2D(camera);
         
         updatePlayer(&player, &pillars);
-        updateEnemies(&enemies, &pillars, &player, &bullets);
+        updateEnemies(&enemies, &pillars, &player, &bullets, &attacks);
         updateBullets(&bullets);
+        updateMeleeEnemyAttacks(&attacks);
 
         camera.target.x = player.x + player.width / 2.0f;
         camera.target.y = player.y + player.height / 2.0f;
          
         displayEnemies(&enemies);
         displayPillars(&pillars);
+        displayMeleeEnemyAttacks(&attacks);
         
         EndMode2D();
         EndDrawing();
@@ -69,4 +73,5 @@ void displayWindow(void) {
     freeEnemies(&enemies);
     freePillars(&pillars);
     freeRangedEnemyBullets(&bullets);
+    freeMeleeEnemyAttacks(&attacks);
 }
