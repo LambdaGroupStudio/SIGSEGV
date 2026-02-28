@@ -58,6 +58,7 @@ void initEnemies(Enemies *enemies);
 void addEnemy(Enemies *enemies, Enemy *enemy);
 void generateEnemies(Enemies *enemies, Pillars *pillars);
 void displayEnemies(Enemies *enemies);
+void handlePlayerStateMachine(Player* player);
 void freeEnemies(Enemies *enemies);
 void freeEnemy(Enemies *enemies, int id);
 

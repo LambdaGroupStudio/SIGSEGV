@@ -16,10 +16,65 @@ typedef struct Player {
     float maxSpeed;
     float jumpStrength;
     bool isGrounded;
+    enum { AR = 0, SHOTGUN = 1, ROCKET_LAUNCHER = 2 } weapon;
+    float reloadTimer;
+    float reloadSpeed;
 } Player;
+
+typedef struct PlayerARBullet {
+    float x;
+    float y;
+    float velocityX;
+    float velocityY;
+    int targetX;
+    int targetY;
+} PlayerARBullet;
+
+typedef struct PlayerShotgunPellet {
+    float x;
+    float y;
+    float velocityX;
+    float velocityY;
+    int targetX;
+    int targetY;
+} PlayerShotgunPellet;
+
+typedef struct PlayerRocket {
+    float x;
+    float y;
+    float velocityX;
+    float velocityY;
+    int targetX;
+    int targetY;
+} PlayerRocket;
+
+typedef dyn_arr(PlayerARBullet) PlayerARBullets;
+typedef dyn_arr(PlayerShotgunPellet) PlayerShotgunPellets;
+typedef dyn_arr(PlayerRocket) PlayerRockets;
+
+PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY);
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY);
+PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY);
+
+void initPlayerARBullets(PlayerARBullets* bullets);
+void initPlayerShotgunPellets(PlayerShotgunPellets* pellets);
+void initPlayerRockets(PlayerRockets* rockets);
 
 Player initPlayer(void);
 void displayPlayer(Player player);
+void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
+void updatePlayerARBullets(PlayerARBullets* bullets);
+void displayPlayerARBullets(PlayerARBullets* bullets);
+void freePlayerARBullets(PlayerARBullets* bullets);
+
+void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets);
+void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets);
+void freePlayerShotgunPellets(PlayerShotgunPellets* pellets);
+
+void updatePlayerRockets(PlayerRockets* rockets);
+void displayPlayerRockets(PlayerRockets* rockets);
+void freePlayerRockets(PlayerRockets* rockets);
+
 void handleMovement(Player* player);
 void handlePlayerCollisions(Player* player, Pillars* pillars);
 void handleJump(Player* player);

@@ -28,6 +28,13 @@ void displayWindow(void) {
     initRangedEnemyBullets(&bullets);
     MeleeEnemyAttacks attacks;
     initMeleeEnemyAttacks(&attacks);
+    
+    PlayerARBullets playerARBullets;
+    initPlayerARBullets(&playerARBullets);
+    PlayerShotgunPellets playerShotgunPellets;
+    initPlayerShotgunPellets(&playerShotgunPellets);
+    PlayerRockets playerRockets;
+    initPlayerRockets(&playerRockets);
 
     Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
     
@@ -57,6 +64,14 @@ void displayWindow(void) {
         
         updatePlayer(&player, &pillars);
         updateEnemies(&enemies, &pillars, &player, &bullets, &attacks);
+        
+        Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
+        playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets, &playerRockets);
+
+        updatePlayerARBullets(&playerARBullets);
+        updatePlayerShotgunPellets(&playerShotgunPellets);
+        updatePlayerRockets(&playerRockets);
+
         updateBullets(&bullets);
         updateMeleeEnemyAttacks(&attacks);
 
@@ -67,11 +82,25 @@ void displayWindow(void) {
         displayPillars(&pillars);
         displayMeleeEnemyAttacks(&attacks);
         
+        displayPlayerARBullets(&playerARBullets);
+        displayPlayerShotgunPellets(&playerShotgunPellets);
+        displayPlayerRockets(&playerRockets);
+        
         EndMode2D();
+        if (player.weapon == AR) {
+            DrawText("Weapon: Assault Rifle", 10, 10, 20, BLACK);
+        } else if (player.weapon == SHOTGUN) {
+            DrawText("Weapon: Shotgun", 10, 10, 20, BLACK);
+        } else if (player.weapon == ROCKET_LAUNCHER) {
+            DrawText("Weapon: Rocket Launcher", 10, 10, 20, BLACK);
+        }
         EndDrawing();
     } 
     freeEnemies(&enemies);
     freePillars(&pillars);
     freeRangedEnemyBullets(&bullets);
     freeMeleeEnemyAttacks(&attacks);
+    freePlayerARBullets(&playerARBullets);
+    freePlayerShotgunPellets(&playerShotgunPellets);
+    freePlayerRockets(&playerRockets);
 }

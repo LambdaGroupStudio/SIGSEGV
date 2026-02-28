@@ -36,8 +36,6 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
     enemy.maxSpeed = maxSpeed;
     enemy.reloadSpeed = reloadSpeed;
     enemy.reloadTimer = 0.0f;
-    enemy.groundedTime = 0.0f;
-    enemy.jumpCooldown = 0.0f;
     enemy.isFleeing = isFleeing;
     enemy.direction = IDLE;
     return enemy;
@@ -136,88 +134,6 @@ void enemyJump(Enemy *enemy) {
     }
 }
 
-bool canEnemyJumpToPillar(const Enemy* enemy, const Pillar* p, float gravity, float direction)
-{
-  // dont jump if we are on same pillar
-  if (enemy->y + enemy->height <= p->y + 1.0f &&
-    enemy->y + enemy->height >= p->y - 1.0f &&
-    enemy->x + enemy->width > p->x &&
-    enemy->x < p->x + p->width) {
-    return false;
-  }
-
-  // Positions
-  float enemyCenterX = enemy->x + enemy->width * 0.5f;
-  float enemyFootY   = enemy->y + enemy->height;
-
-  float targetCenterX = p->x + p->width * 0.5f;
-  float targetTopY    = p->y;
-
-  float dx = targetCenterX - enemyCenterX;
-  float dy = targetTopY - enemyFootY;
-
-  // first check is to ensure that the dirn is +ve
-  if (dx * direction <= 0.0f)
-      return false;
-
-  // next we check for max jump height (found by velocity)
-  // 
-  // Basically using v^2 / 2a = s (at u = 0) and s is height
-  const float maxJumpHeight = (ENEMY_JUMP_VELOCITY * ENEMY_JUMP_VELOCITY) / (2.0f * gravity);
-
-  if (dy > maxJumpHeight)
-      return false;
-
-  // so enemy's vertical motion under const accl is:
-  // 
-  // dy = velocity * time - 0.5 * gravity * time^2
-  // (from v = ut + 0.5at^2 eqn)
-  // 
-  // so 0.5*gt^2 - vt + dy = 0 (find t)
-  // 
-  // so here a = 0.5 * g
-  // b = -v
-  // c = dy
-  // we need to find quadratic roots (yes 6th grade maths) 
-  const float a = 0.5f * gravity;
-  const float b = -ENEMY_JUMP_VELOCITY;
-  const float c = dy;
-
-  // b^2 - 4ac to find whether roots are real or not
-  // if it is > 0 it reaches the height
-  const float disc = b*b - 4*a*c;
-  if (disc < 0.0f)
-      return false;
-
-  const float sqrtDisc = sqrtf(disc);
-
-  // We finally get the values of t via:
-  //
-  // t = -b +- sqrt(b^2 - 4ac) / 2a
-  // 
-  // t1 - time when enemy enters height
-  // t2 - time when enemy exits height
-  const float t1 = (-b - sqrtDisc) / (2*a);
-  const float t2 = (-b + sqrtDisc) / (2*a);
-
-  // get the max of t1 and t2
-  // (gives max time window for which landing is possible)
-  const float t_exit = fmaxf(t1, t2);
-
-  // degen case
-  if (t_exit <= 0.0f)
-      return false;
-
-  // check if we can actually reach the other ledge in front
-  const float usableSpeed = enemy->maxSpeed * AIR_CONTROL_FACTOR;
-  const float maxReach    = usableSpeed * t_exit;
-
-  if (fabsf(dx) > maxReach)
-      return false;
-
-  return true;
-}
-
 void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     // Center of enemy and agro box
     float cx = enemy->x + enemy->width / 2.0f;
@@ -299,29 +215,20 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
 
     // Robust Ledge Avoidance
     // This shit should be trademarked by me (The name)
-    //
-    // should also thank sid for fixing this logic
-    if (enemy->isGrounded && enemy->jumpCooldown <= 0.0f) {
-
-        const float direction = (enemy->velocityX > 0.0f) ? 1.0f : (enemy->velocityX < 0.0f) ? -1.0f : 0.0f;
-
-        if (direction != 0.0f) {
+    if (enemy->isGrounded) {
+        float probeDist = 15.0f; // Check 15px ahead
+        float dirMultiplier = 0.0f;
+        if (enemy->direction == RIGHT) dirMultiplier = 1.0f;
+        else if (enemy->direction == LEFT) dirMultiplier = -1.0f;
+        
+        if (dirMultiplier != 0.0f) {
+            float probeX = enemy->x + (enemy->width / 2.0f) + (dirMultiplier * (enemy->width / 2.0f + probeDist));
             float probeY = enemy->y + (float)enemy->height + 5.0f; // Just below feet
-
-            float footOffset = enemy->width * 0.4f;
-
-            float probeX1 = enemy->x + enemy->width * 0.5f +
-                            direction * (enemy->width * 0.5f + 10.0f);
-
-            float probeX2 = probeX1 + direction * footOffset;
-
+            
             bool groundAhead = false;
-
             for (size_t i = 0; i < pillars->size; i++) {
                 const Pillar* p = dyn_arr_get(pillars, i);
-
-                if (((probeX1 >= p->x && probeX1 <= p->x + p->width) ||
-                     (probeX2 >= p->x && probeX2 <= p->x + p->width)) &&
+                if (probeX >= p->x && probeX <= p->x + p->width &&
                     probeY >= p->y && probeY <= p->y + p->height) {
                     groundAhead = true;
                     break;
@@ -329,28 +236,38 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
             }
 
             if (!groundAhead) {
-
-                // Look for a reachable platform ahead
-                bool jumpTargetFound = false;
-
+                bool targetFound = false;
+                float jumpTargetRelativeX = dirMultiplier * 500.0f; // Maximum jump look-ahead
+                
                 for (size_t i = 0; i < pillars->size; i++) {
                     const Pillar* p = dyn_arr_get(pillars, i);
-
-                    if (enemy->groundedTime < 0.05f)
-                      return; // too unstable to jump
-
-                    if (canEnemyJumpToPillar(enemy, p, gravity, direction)) {
-                        jumpTargetFound = true;
+                    // Check if there's a pillar at our height or slightly lower within jump range
+                    if (enemy->x + jumpTargetRelativeX >= p->x && enemy->x + jumpTargetRelativeX <= p->x + p->width &&
+                        enemy->y + enemy->height >= p->y - 100.0f && enemy->y + enemy->height <= p->y + 500.0f) {
+                        targetFound = true;
                         break;
                     }
                 }
 
-                if (jumpTargetFound) {
+                if (targetFound) {
                     enemyJump(enemy);
-                    enemy->jumpCooldown = 0.35f; // add cooldown to jumps 
                 } else {
                     // VOID AHEAD. HARD STOP.
                     enemy->velocityX = 0.0f;
+                    
+                    // Snap to the absolute edge of the current pillar to prevent "hanging"
+                    for (size_t i = 0; i < pillars->size; i++) {
+                        const Pillar* p = dyn_arr_get(pillars, i);
+                        if (isColliding(enemy->x, enemy->y + 1.0f, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
+                            if (dirMultiplier > 0.0f) {
+                                enemy->x = p->x + p->width - (float)enemy->width;
+                            } else {
+                                enemy->x = p->x;
+                            }
+                            enemy->direction = IDLE; // Set IDLE when we stop at a ledge
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -414,11 +331,6 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
         enemy->velocityY = 0.0f;
         enemy->isGrounded = true;
     }
-
-    if (enemy->isGrounded)
-      enemy->groundedTime += deltaTime;
-    else
-      enemy->groundedTime = 0.0f;
 }
 
 RangedEnemyBullet initEnemyBullet(float x, float y, float velocityX, float velocityY, float targetX, float targetY, float speed) {
@@ -450,7 +362,7 @@ void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
     if (player->x < enemy->x) enemy->direction = LEFT;
     else if (player->x > enemy->x) enemy->direction = RIGHT;
 
-    bullet.speed = 1.0f; // Slow for testing, will be increased later
+    bullet.speed = ENEMY_BULLET_SPEED;
     
     float dx = player->x - bullet.x;
     float dy = player->y - bullet.y;
@@ -474,7 +386,7 @@ void updateBullets(RangedEnemyBullets* bullets) {
         RangedEnemyBullet* b = dyn_arr_get(bullets, i);
         b->x += b->velocityX;
         b->y += b->velocityY;
-        DrawRectangle((int)b->x, (int)b->y, 20, 20, YELLOW); // Dont worry about the magic number they a re temporary
+        DrawRectangle((int)b->x, (int)b->y, (int)ENEMY_BULLET_SIZE, (int)ENEMY_BULLET_SIZE, YELLOW); 
     }
 }
 
@@ -530,7 +442,7 @@ void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
     for (size_t i = 0; i < attacks->size; i++) {
         MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
         // Draw a semi-transparent red rectangle for the attack hitbox
-        DrawRectangleV((Vector2){a->x, a->y}, (Vector2){a->width, a->height}, Fade(RED, 0.4f));
+        DrawRectangleV((Vector2){a->x, a->y}, (Vector2){a->width, a->height}, Fade(RED, 0.4e0f));
     }
 }
 
@@ -544,10 +456,6 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
 
         if (e->reloadTimer > 0) {
             e->reloadTimer -= deltaTime;
-        }
-      
-        if (e->jumpCooldown > 0.0f) {
-          e->jumpCooldown -= deltaTime;
         }
 
         if (e->type == RANGED) {
