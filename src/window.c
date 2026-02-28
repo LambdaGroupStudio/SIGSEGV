@@ -28,6 +28,13 @@ void displayWindow(void) {
     initRangedEnemyBullets(&bullets);
     MeleeEnemyAttacks attacks;
     initMeleeEnemyAttacks(&attacks);
+    
+    PlayerARBullets playerARBullets;
+    initPlayerARBullets(&playerARBullets);
+    PlayerShotgunPellets playerShotgunPellets;
+    initPlayerShotgunPellets(&playerShotgunPellets);
+    PlayerRockets playerRockets;
+    initPlayerRockets(&playerRockets);
 
     Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
     
@@ -57,6 +64,14 @@ void displayWindow(void) {
         
         updatePlayer(&player, &pillars);
         updateEnemies(&enemies, &pillars, &player, &bullets, &attacks);
+        
+        Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
+        playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets, &playerRockets);
+
+        updatePlayerARBullets(&playerARBullets);
+        updatePlayerShotgunPellets(&playerShotgunPellets);
+        updatePlayerRockets(&playerRockets);
+
         updateBullets(&bullets);
         updateMeleeEnemyAttacks(&attacks);
 
@@ -66,6 +81,10 @@ void displayWindow(void) {
         displayEnemies(&enemies);
         displayPillars(&pillars);
         displayMeleeEnemyAttacks(&attacks);
+        
+        displayPlayerARBullets(&playerARBullets);
+        displayPlayerShotgunPellets(&playerShotgunPellets);
+        displayPlayerRockets(&playerRockets);
         
         EndMode2D();
         if (player.weapon == AR) {
@@ -81,4 +100,7 @@ void displayWindow(void) {
     freePillars(&pillars);
     freeRangedEnemyBullets(&bullets);
     freeMeleeEnemyAttacks(&attacks);
+    freePlayerARBullets(&playerARBullets);
+    freePlayerShotgunPellets(&playerShotgunPellets);
+    freePlayerRockets(&playerRockets);
 }
