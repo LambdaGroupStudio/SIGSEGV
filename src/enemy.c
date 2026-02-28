@@ -37,6 +37,7 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
     enemy.reloadSpeed = reloadSpeed;
     enemy.reloadTimer = 0.0f;
     enemy.isFleeing = isFleeing;
+    enemy.direction = IDLE;
     return enemy;
 }
 
@@ -164,20 +165,27 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
             // Melee ALWAYS chases within agro box
             if (player->x < enemy->x) {
                 enemy->velocityX -= enemy->acceleration * deltaTime;
+                enemy->direction = LEFT;
             } else if (player->x > enemy->x) {
                 enemy->velocityX += enemy->acceleration * deltaTime;
+                enemy->direction = RIGHT;
             }
         } else if (enemy->type == RANGED) {
             if (enemy->isFleeing) {
                 // Ranged flees within inner agro box
                 if (player->x < enemy->x) {
                     enemy->velocityX += enemy->acceleration * deltaTime;
+                    enemy->direction = RIGHT;
                 } else if (player->x > enemy->x) {
                     enemy->velocityX -= enemy->acceleration * deltaTime;
+                    enemy->direction = LEFT;
                 }
             } else {
                 // Ranged stays still / "don't fight"
                 enemy->velocityX *= 0.9f;
+                // Keep current direction or IDLE? Ranged usually face the player.
+                // We'll update it in enemyShoot anyway.
+                if (fabsf(enemy->velocityX) < 1.0f) enemy->direction = IDLE;
             }
         }
 
@@ -187,7 +195,10 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     } else {
         // Friction when not chased
         enemy->velocityX *= 0.9f;
-        if (fabsf(enemy->velocityX) < 1.0f) enemy->velocityX = 0.0f;
+        if (fabsf(enemy->velocityX) < 1.0f) {
+            enemy->velocityX = 0.0f;
+            enemy->direction = IDLE;
+        }
     }
 
     // Prevent enemies from getting stuck on a wall by making them jump
@@ -206,10 +217,12 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
     // This shit should be trademarked by me (The name)
     if (enemy->isGrounded) {
         float probeDist = 15.0f; // Check 15px ahead
-        float direction = (enemy->velocityX > 0.0f) ? 1.0f : (enemy->velocityX < 0.0f ? -1.0f : 0.0f);
+        float dirMultiplier = 0.0f;
+        if (enemy->direction == RIGHT) dirMultiplier = 1.0f;
+        else if (enemy->direction == LEFT) dirMultiplier = -1.0f;
         
-        if (direction != 0.0f) {
-            float probeX = enemy->x + (enemy->width / 2.0f) + (direction * (enemy->width / 2.0f + probeDist));
+        if (dirMultiplier != 0.0f) {
+            float probeX = enemy->x + (enemy->width / 2.0f) + (dirMultiplier * (enemy->width / 2.0f + probeDist));
             float probeY = enemy->y + (float)enemy->height + 5.0f; // Just below feet
             
             bool groundAhead = false;
@@ -224,7 +237,7 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
 
             if (!groundAhead) {
                 bool targetFound = false;
-                float jumpTargetRelativeX = direction * 500.0f; // Maximum jump look-ahead
+                float jumpTargetRelativeX = dirMultiplier * 500.0f; // Maximum jump look-ahead
                 
                 for (size_t i = 0; i < pillars->size; i++) {
                     const Pillar* p = dyn_arr_get(pillars, i);
@@ -246,11 +259,12 @@ void moveEnemyTowardsPlayer(Enemy* enemy, Player* player, Pillars* pillars) {
                     for (size_t i = 0; i < pillars->size; i++) {
                         const Pillar* p = dyn_arr_get(pillars, i);
                         if (isColliding(enemy->x, enemy->y + 1.0f, enemy->width, enemy->height, p->x, p->y, p->width, p->height)) {
-                            if (direction > 0.0f) {
+                            if (dirMultiplier > 0.0f) {
                                 enemy->x = p->x + p->width - (float)enemy->width;
                             } else {
                                 enemy->x = p->x;
                             }
+                            enemy->direction = IDLE; // Set IDLE when we stop at a ledge
                             break;
                         }
                     }
@@ -279,6 +293,7 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
             if (enemy->velocityX > 0.0f) enemy->x = p->x - enemy->width;
             else if (enemy->velocityX < 0.0f) enemy->x = p->x + p->width;
             enemy->velocityX = 0.0f;
+            enemy->direction = IDLE; // Stop moving if we hit a wall
         }
     }
 
@@ -342,6 +357,11 @@ void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
     bullet.y = enemy->y;
     bullet.targetX = player->x;
     bullet.targetY = player->y;
+    
+    // Face the player when shooting
+    if (player->x < enemy->x) enemy->direction = LEFT;
+    else if (player->x > enemy->x) enemy->direction = RIGHT;
+
     bullet.speed = 1.0f; // Slow for testing, will be increased later
     
     float dx = player->x - bullet.x;
