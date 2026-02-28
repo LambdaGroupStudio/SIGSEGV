@@ -79,6 +79,8 @@ void handleGunStateMachine(Player* player) {
     }
 }
 
+
+
 void handlePlayerCollisions(Player* player, Pillars* pillars) {
     player->isGrounded = false;
     float buffer = 10.0f;
@@ -151,6 +153,7 @@ void updatePlayer(Player* player, Pillars* pillars) {
     handleMovement(player);
     handleJump(player);
     handlePlayerGravity(player);
+    handleGunStateMachine(player);
     displayPlayer(*player);
 }
 

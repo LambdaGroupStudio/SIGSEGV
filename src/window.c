@@ -68,6 +68,13 @@ void displayWindow(void) {
         displayMeleeEnemyAttacks(&attacks);
         
         EndMode2D();
+        if (player.weapon == AR) {
+            DrawText("Weapon: Assault Rifle", 10, 10, 20, BLACK);
+        } else if (player.weapon == SHOTGUN) {
+            DrawText("Weapon: Shotgun", 10, 10, 20, BLACK);
+        } else if (player.weapon == ROCKET_LAUNCHER) {
+            DrawText("Weapon: Rocket Launcher", 10, 10, 20, BLACK);
+        }
         EndDrawing();
     } 
     freeEnemies(&enemies);
