@@ -3,6 +3,45 @@
 #include "raylib.h"
 #include "helpers.h"
 
+PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY) {
+    PlayerARBullet bullet;
+    bullet.x = x;
+    bullet.y = y;
+    bullet.velocityX = velocityX;
+    bullet.velocityY = velocityY;
+    return bullet;
+}
+
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY) {
+    PlayerShotgunPellet pellet;
+    pellet.x = x;
+    pellet.y = y;
+    pellet.velocityX = velocityX;
+    pellet.velocityY = velocityY;
+    return pellet;
+}
+
+PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY) {
+    PlayerRocket rocket;
+    rocket.x = x;
+    rocket.y = y;
+    rocket.velocityX = velocityX;
+    rocket.velocityY = velocityY;
+    return rocket;
+}
+
+void initPlayerARBullets(PlayerARBullets* bullets) {
+    *bullets = dyn_arr_create(sizeof(PlayerARBullet));
+}
+
+void initPlayerShotgunPellets(PlayerShotgunPellets* pellets) {
+    *pellets = dyn_arr_create(sizeof(PlayerShotgunPellet));
+}
+
+void initPlayerRockets(PlayerRockets* rockets) {
+    *rockets = dyn_arr_create(sizeof(PlayerRocket));
+}
+
 void displayPlayer(Player player) {
     DrawRectangle((int)player.x, (int)player.y, player.width, player.height, RED);
 }
@@ -28,6 +67,16 @@ void handleMovement(Player* player) {
     }
     if (player->velocityX > player->maxSpeed) player->velocityX = player->maxSpeed;
     if (player->velocityX < -player->maxSpeed) player->velocityX = -player->maxSpeed;
+}
+
+void handleGunStateMachine(Player* player) {
+    if (IsKeyPressed(KEY_ONE)) {
+        player->weapon = AR;
+    } else if (IsKeyPressed(KEY_TWO)) {
+        player->weapon = SHOTGUN;
+    } else if (IsKeyPressed(KEY_THREE)) {
+        player->weapon = ROCKET_LAUNCHER;
+    }
 }
 
 void handlePlayerCollisions(Player* player, Pillars* pillars) {
