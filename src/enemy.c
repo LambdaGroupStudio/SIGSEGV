@@ -312,7 +312,7 @@ void handleEnemyCollisions(Enemy* enemy, Pillars* pillars) {
     }
 }
 
-RangedEnemyBullet initEnemyBullet(float x. float y, float velocityX, float velocityY, float targetX, float targetY, float speed) {
+RangedEnemyBullet initEnemyBullet(float x, float y, float velocityX, float velocityY, float targetX, float targetY, float speed) {
     RangedEnemyBullet bullet;
     bullet.x = x;
     bullet.y = y;
@@ -321,33 +321,35 @@ RangedEnemyBullet initEnemyBullet(float x. float y, float velocityX, float veloc
     bullet.targetX = targetX;
     bullet.targetY = targetY;
     bullet.speed = speed;
-    return RangedEnemyBullet;
-
+    return bullet;
 }
 
-void initRangedEnemyBullets(RangedEnemyBullets *bullets, RangedEnemyBullet bullet*) {
-    *bullets = dyn_arr_create(bullets, bullet)
+void initRangedEnemyBullets(RangedEnemyBullets *bullets) {
+    *bullets = dyn_arr_create(sizeof(RangedEnemyBullet));
 }
 
 void enemyShoot(Enemy *enemy, RangedEnemyBullets* bullets, Player *player) {
-    RangedEnemyBullet bullet = initRangedEnemyBullets;
-    bullet.x = Enemy.x;
-    bullet.y = Enemy.y;
-    bullet.targetX = player.x;
-    bullet.targetY = player.y;
+    RangedEnemyBullet bullet;
+    bullet.x = enemy->x;
+    bullet.y = enemy->y;
+    bullet.targetX = player->x;
+    bullet.targetY = player->y;
+    bullet.speed = 10.0f;
     
-    float dx = player.x - bullet.x;
-    float dy = player.y - bullet.y;
+    float dx = player->x - bullet.x;
+    float dy = player->y - bullet.y;
 
     float dist = sqrt(dx * dx + dy * dy);
 
-    float vx = dx / dist * bullet.speed;
-    float vy = dy / dist * bullet.speed;
-
-    bullet.velocityX = dx;
-    bullet.velocityY = dy;
+    if (dist > 0) {
+        bullet.velocityX = (dx / dist) * bullet.speed;
+        bullet.velocityY = (dy / dist) * bullet.speed;
+    } else {
+        bullet.velocityX = 0;
+        bullet.velocityY = 0;
+    }
     
-    dyn_arr_push_back(bullets, bullet);
+    dyn_arr_push_back(bullets, &bullet);
 }
 
 void updateBullets(RangedEnemyBullets* bullets) {
@@ -355,14 +357,18 @@ void updateBullets(RangedEnemyBullets* bullets) {
         RangedEnemyBullet* b = dyn_arr_get(bullets, i);
         b->x += b->velocityX;
         b->y += b->velocityY;
+        DrawRectangle((int)b->x, (int)b->y, 20, 20, YELLOW); // Dont worry about the magic number they a re temporary
     }
 }
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player) {
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets bullet) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);
         moveEnemyTowardsPlayer(e, player, pillars);
         handleEnemyGravity(e);
         handleEnemyCollisions(e, pillars);
+        if (e->type == 1) {
+            enemyShoot(e, bullet);
+        } // RANGED
     }
 }

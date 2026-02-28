@@ -10,8 +10,8 @@ void initWindow(void) {
     int width   = GetMonitorWidth(monitor);
     int height  = GetMonitorHeight(monitor);
 
-    if (width <= 0) width = 1600;
-    if (height <= 0) height = 900;
+    if (width <= 0) width = 1920;
+    if (height <= 0) height = 1080;
 
     InitWindow(width, height, "SIGSEGV");
 }
