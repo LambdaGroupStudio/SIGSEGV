@@ -40,6 +40,17 @@ PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY
   rocket.explosionRadius = explosionRadius;
   return rocket;
 }
+PlayerExplosion initPlayerExplosion(float x, float y, float radius, int damage)
+{
+  PlayerExplosion explosion;
+  explosion.x        = x;
+  explosion.y        = y;
+  explosion.radius   = radius;
+  explosion.duration = 0.5f;
+  explosion.timer    = 0.0f;
+  explosion.damage   = damage;
+  return explosion;
+}
 
 void diePlayer(void)
 {
@@ -87,6 +98,11 @@ void initPlayerShotgunPellets(PlayerShotgunPellets* pellets)
 }
 
 void initPlayerRockets(PlayerRockets* rockets) { *rockets = dyn_arr_create(sizeof(PlayerRocket)); }
+
+void initPlayerExplosions(PlayerExplosions* explosions)
+{
+  *explosions = dyn_arr_create(sizeof(PlayerExplosion));
+}
 
 void displayPlayer(Player player)
 {
@@ -273,13 +289,51 @@ void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets)
 
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets) { dyn_arr_free(pellets); }
 
-void updatePlayerRockets(Player* player, PlayerRockets* rockets)
+void updatePlayerRockets(Player* player, PlayerRockets* rockets, Pillars* pillars, Enemies* enemies,
+                         PlayerExplosions* explosions)
 {
   for (size_t i = 0; i < rockets->size; i++)
   {
     PlayerRocket* r = dyn_arr_get(rockets, i);
     r->x += r->velocityX * deltaTime;
     r->y += r->velocityY * deltaTime;
+
+    bool exploded = false;
+
+    // Check collision with pillars
+    for (size_t j = 0; j < pillars->size; j++)
+    {
+      Pillar* p = dyn_arr_get(pillars, j);
+      if (isColliding(r->x - PLAYER_ROCKET_SIZE * 0.5f, r->y - PLAYER_ROCKET_SIZE * 0.5f,
+                      PLAYER_ROCKET_SIZE, PLAYER_ROCKET_SIZE, p->x, p->y, p->width, p->height))
+      {
+        exploded = true;
+        break;
+      }
+    }
+
+    if (!exploded)
+    {
+      // Check collision with enemies
+      for (size_t j = 0; j < enemies->size; j++)
+      {
+        Enemy* e = dyn_arr_get(enemies, j);
+        if (isColliding(r->x - PLAYER_ROCKET_SIZE * 0.5f, r->y - PLAYER_ROCKET_SIZE * 0.5f,
+                        PLAYER_ROCKET_SIZE, PLAYER_ROCKET_SIZE, e->x, e->y, e->width, e->height))
+        {
+          exploded = true;
+          break;
+        }
+      }
+    }
+
+    if (exploded)
+    {
+      triggerPlayerExplosion(explosions, r->x, r->y, (float)r->explosionRadius, r->damage);
+      dyn_arr_pop_at(rockets, i);
+      i--;
+      continue;
+    }
 
     float dx = r->x - player->x;
     float dy = r->y - player->y;
@@ -304,6 +358,55 @@ void displayPlayerRockets(PlayerRockets* rockets)
 }
 
 void freePlayerRockets(PlayerRockets* rockets) { dyn_arr_free(rockets); }
+
+void updatePlayerExplosions(PlayerExplosions* explosions, Enemies* enemies)
+{
+  for (size_t i = 0; i < explosions->size; i++)
+  {
+    PlayerExplosion* e = dyn_arr_get(explosions, i);
+    e->timer += deltaTime;
+
+    if (e->timer >= e->duration)
+    {
+      dyn_arr_pop_at(explosions, i);
+      i--;
+      continue;
+    }
+
+    // Only damage once (or we could store hit enemies, but for now let's just do it first frame)
+    if (e->timer - deltaTime <= 0.0f)
+    {
+      for (size_t j = 0; j < enemies->size; j++)
+      {
+        Enemy* enemy = dyn_arr_get(enemies, j);
+        float  dx    = enemy->x + enemy->width * 0.5f - e->x;
+        float  dy    = enemy->y + enemy->height * 0.5f - e->y;
+        if (dx * dx + dy * dy <= e->radius * e->radius)
+        {
+          enemy->hp -= e->damage;
+        }
+      }
+    }
+  }
+}
+
+void displayPlayerExplosions(PlayerExplosions* explosions)
+{
+  for (size_t i = 0; i < explosions->size; i++)
+  {
+    PlayerExplosion* e     = dyn_arr_get(explosions, i);
+    float            alpha = 1.0f - (e->timer / e->duration);
+    DrawCircleGradient((int)e->x, (int)e->y, e->radius, Fade(ORANGE, alpha), Fade(YELLOW, 0.0f));
+  }
+}
+
+void freePlayerExplosions(PlayerExplosions* explosions) { dyn_arr_free(explosions); }
+
+void triggerPlayerExplosion(PlayerExplosions* explosions, float x, float y, float radius, int damage)
+{
+  PlayerExplosion e = initPlayerExplosion(x, y, radius, damage);
+  dyn_arr_push_back(explosions, &e);
+}
 
 void handlePlayerCollisions(Player* player, Pillars* pillars)
 {
@@ -394,6 +497,7 @@ void handlePlayerGravity(Player* player)
     player->velocityY += gravity * deltaTime;
   }
 }
+
 
 void updatePlayer(Player* player, Pillars* pillars)
 {

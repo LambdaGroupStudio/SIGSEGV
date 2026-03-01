@@ -39,6 +39,8 @@ void displayWindow(void)
   initPlayerShotgunPellets(&playerShotgunPellets);
   PlayerRockets playerRockets;
   initPlayerRockets(&playerRockets);
+  PlayerExplosions playerExplosions;
+  initPlayerExplosions(&playerExplosions);
 
   Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
 
@@ -78,7 +80,8 @@ void displayWindow(void)
 
     updatePlayerARBullets(&player, &playerARBullets);
     updatePlayerShotgunPellets(&player, &playerShotgunPellets);
-    updatePlayerRockets(&player, &playerRockets);
+    updatePlayerRockets(&player, &playerRockets, &pillars, &enemies, &playerExplosions);
+    updatePlayerExplosions(&playerExplosions, &enemies);
 
     updateBullets(&bullets);
     updateMeleeEnemyAttacks(&attacks);
@@ -93,6 +96,7 @@ void displayWindow(void)
     displayPlayerARBullets(&playerARBullets);
     displayPlayerShotgunPellets(&playerShotgunPellets);
     displayPlayerRockets(&playerRockets);
+    displayPlayerExplosions(&playerExplosions);
 
     EndMode2D();
 
@@ -126,4 +130,5 @@ void displayWindow(void)
   freePlayerARBullets(&playerARBullets);
   freePlayerShotgunPellets(&playerShotgunPellets);
   freePlayerRockets(&playerRockets);
+  freePlayerExplosions(&playerExplosions);
 }
