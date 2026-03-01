@@ -1,8 +1,9 @@
-#include "enemy.h"
 #include "raylib.h"
 #include "helpers.h"
 #include "pillar.h"
 #include "globals.h"
+#include "player.h"
+#include "enemy.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -456,7 +457,11 @@ void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
     }
 }
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks) {
+void enemyTakeDamage(Enemy* enemy, int damage) {
+    enemy->hp -= damage;
+}
+
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);
 
@@ -494,6 +499,30 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
         if (isDead(e)) {
             enemyDeath(enemies, e->id);
             i--; // Adjust index after removal
+        }
+        for (size_t j = 0; j < arBullets->size; j++) {
+            PlayerARBullet* b = dyn_arr_get(arBullets, j);
+            if (isColliding(b->x, b->y, 10, 10, e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, b->damage);
+                dyn_arr_pop_at(arBullets, j);
+                j--;
+            }
+        }
+        for (size_t j = 0; j < shotgunPellets->size; j++) {
+            PlayerShotgunPellet* p = dyn_arr_get(shotgunPellets, j);
+            if (isColliding(p->x, p->y, 10, 10, e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, p->damage);
+                dyn_arr_pop_at(shotgunPellets, j);
+                j--;
+            }
+        }
+        for (size_t j = 0; j < rockets->size; j++) {
+            PlayerRocket* r = dyn_arr_get(rockets, j);
+            float explosionRadius = r->explosionRadius;
+            if (isColliding(r->x - explosionRadius, r->y - explosionRadius, explosionRadius * 2, explosionRadius * 2,
+                            e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, r->damage);
+            }
         }
     }
 }

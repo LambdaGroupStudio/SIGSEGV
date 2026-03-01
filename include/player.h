@@ -1,7 +1,10 @@
 #pragma once
 #include <stdbool.h>
 #include "pillar.h"
-#include "enemy.h"
+#include "utils/array.h"
+
+// Forward declaration to break circular dependency with enemy.h
+typedef __DynArray Enemies;
 
 typedef struct Player {
     float x;
@@ -57,9 +60,9 @@ typedef dyn_arr(PlayerARBullet) PlayerARBullets;
 typedef dyn_arr(PlayerShotgunPellet) PlayerShotgunPellets;
 typedef dyn_arr(PlayerRocket) PlayerRockets;
 
-PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY);
-PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY);
-PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY);
+PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage);
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY, int damage);
+PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage, int explosionRadius);
 
 void initPlayerARBullets(PlayerARBullets* bullets);
 void initPlayerShotgunPellets(PlayerShotgunPellets* pellets);

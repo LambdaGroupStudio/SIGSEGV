@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include "helpers.h"
 #include <math.h>
+#include "enemy.h"
 
 PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage) {
     PlayerARBullet bullet;
@@ -101,7 +102,7 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
 
             if (player->weapon == AR) {
                 float speed = PLAYER_AR_SPEED;
-                PlayerARBullet bullet = initPlayerARBullet(px, py, dirX * speed, dirY * speed);
+                PlayerARBullet bullet = initPlayerARBullet(px, py, dirX * speed, dirY * speed, PLAYER_AR_DAMAGE);
                 dyn_arr_push_back(arBullets, &bullet);
                 player->reloadTimer = PLAYER_AR_RELOAD; // Fast fire rate
             } else if (player->weapon == SHOTGUN) {

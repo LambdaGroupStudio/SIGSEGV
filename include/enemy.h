@@ -1,8 +1,13 @@
 #pragma once
 
 #include "pillar.h"
-#include "player.h"
 #include "utils/array.h"
+
+// Forward declarations to break circular dependency with player.h
+typedef struct Player Player;
+typedef __DynArray PlayerARBullets;
+typedef __DynArray PlayerShotgunPellets;
+typedef __DynArray PlayerRockets;
 
 
 typedef struct Enemy {
@@ -65,7 +70,7 @@ void freeEnemy(Enemies *enemies, int id);
 bool isDead(Enemy* enemy);
 void enemyDeath(Enemies* enemies, int id);
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks);
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
 
 bool canEnemyJumpToPillar(const Enemy* enemy, const Pillar* p, float gravity, float direction);
 void moveEnemyTowardsPlayer(Enemy *enemy, Player *player, Pillars *pillars);
