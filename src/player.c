@@ -36,6 +36,15 @@ PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY
     return rocket;
 }
 
+void diePlayer(void) {
+    // For now we just print SIGSEGV on the screen and stop accepting input
+    DrawText("SIGSEGV", GetScreenWidth() / 2 - MeasureText("SIGSEGV", 50) / 2, GetScreenHeight() / 2 - 25, 50, RED);
+}
+
+bool isPlayerDead(Player *player) {
+    return player->hp <= 0;
+}
+
 void initPlayerARBullets(PlayerARBullets* bullets) {
     *bullets = dyn_arr_create(sizeof(PlayerARBullet));
 }
@@ -270,6 +279,10 @@ void handlePlayerGravity(Player* player) {
 }
 
 void updatePlayer(Player* player, Pillars* pillars) {
+    if (isPlayerDead(player)) {
+        diePlayer();
+        return;
+    } 
     handlePlayerCollisions(player, pillars);
     handleMovement(player);
     handleJump(player);

@@ -23,6 +23,7 @@ typedef struct Player {
     enum { AR = 0, SHOTGUN = 1, ROCKET_LAUNCHER = 2 } weapon;
     float reloadTimer;
     float reloadSpeed;
+    int hp;
 } Player;
 
 typedef struct PlayerARBullet {
@@ -70,6 +71,9 @@ void initPlayerRockets(PlayerRockets* rockets);
 
 Player initPlayer(void);
 void displayPlayer(Player player);
+void takeDamage(Player* player, int damage);
+void diePlayer(void);
+
 void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
 void updatePlayerARBullets(PlayerARBullets* bullets);
 void displayPlayerARBullets(PlayerARBullets* bullets);
