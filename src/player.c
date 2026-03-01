@@ -41,6 +41,25 @@ void diePlayer(void) {
     DrawText("SIGSEGV", GetScreenWidth() / 2 - MeasureText("SIGSEGV", 50) / 2, GetScreenHeight() / 2 - 25, 50, RED);
 }
 
+void takeDamage(Player *player, MeleeEnemyAttacks *attacks, RangedEnemyBullets *bullets) {
+    for (size_t i = 0; i < attacks->size; i++) {
+        MeleeEnemyAttack* a = dyn_arr_get(attacks, i);
+        if (!a->hasDealtDamage && isColliding(player->x, player->y, player->width, player->height, a->x, a->y, a->width, a->height)) {
+            player->hp -= a->damage;
+            a->hasDealtDamage = true;
+        }
+    }
+    
+    for (size_t i = 0; i < bullets->size; i++) {
+        RangedEnemyBullet* b = dyn_arr_get(bullets, i);
+        if (isColliding(player->x, player->y, player->width, player->height, b->x, b->y, ENEMY_BULLET_SIZE, ENEMY_BULLET_SIZE)) {
+            player->hp -= b->damage;
+            dyn_arr_pop_at(bullets, i);
+            i--;
+        }
+    }
+}
+
 bool isPlayerDead(Player *player) {
     return player->hp <= 0;
 }
@@ -310,5 +329,6 @@ Player initPlayer(void) {
     player.reloadTimer = 0.0f;
     player.reloadSpeed = 1.0f;
     player.weapon = AR;
+    player.hp = 100;
     return player;
 }

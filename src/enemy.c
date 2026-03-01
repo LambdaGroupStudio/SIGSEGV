@@ -353,6 +353,7 @@ RangedEnemyBullet initEnemyBullet(float x, float y, float velocityX, float veloc
     bullet.targetX = targetX;
     bullet.targetY = targetY;
     bullet.speed = speed;
+    bullet.damage = ENEMY_BULLET_DAMAGE;
     return bullet;
 }
 
@@ -413,6 +414,8 @@ MeleeEnemyAttack initMeleeEnemyAttack(float x, float y, float width, float heigh
     attack.height = height;
     attack.duration = 0.5f; // Attack hitbox lasts for 0.5 seconds
     attack.timer = 0.0f;
+    attack.damage = ENEMY_MELEE_DAMAGE;
+    attack.hasDealtDamage = false;
     return attack;
 }
 
