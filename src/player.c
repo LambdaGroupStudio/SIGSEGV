@@ -222,13 +222,32 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
   }
 }
 
-void updatePlayerARBullets(Player* player, PlayerARBullets* bullets)
+void updatePlayerARBullets(Player* player, PlayerARBullets* bullets, Pillars* pillars)
 {
   for (size_t i = 0; i < bullets->size; i++)
   {
     PlayerARBullet* b = dyn_arr_get(bullets, i);
     b->x += b->velocityX * deltaTime;
     b->y += b->velocityY * deltaTime;
+
+    bool hit = false;
+    for (size_t j = 0; j < pillars->size; j++)
+    {
+      Pillar* p = dyn_arr_get(pillars, j);
+      if (isColliding(b->x - PLAYER_AR_BULLET_SIZE * 0.5f, b->y - PLAYER_AR_BULLET_SIZE * 0.5f,
+                      PLAYER_AR_BULLET_SIZE, PLAYER_AR_BULLET_SIZE, p->x, p->y, p->width, p->height))
+      {
+        hit = true;
+        break;
+      }
+    }
+
+    if (hit)
+    {
+      dyn_arr_pop_at(bullets, i);
+      i--;
+      continue;
+    }
 
     // we update wrt player space (with max bounds based on world)
     //
@@ -259,13 +278,34 @@ void displayPlayerARBullets(PlayerARBullets* bullets)
 
 void freePlayerARBullets(PlayerARBullets* bullets) { dyn_arr_free(bullets); }
 
-void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets)
+void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets, Pillars* pillars)
 {
   for (size_t i = 0; i < pellets->size; i++)
   {
     PlayerShotgunPellet* p = dyn_arr_get(pellets, i);
     p->x += p->velocityX * deltaTime;
     p->y += p->velocityY * deltaTime;
+
+    bool hit = false;
+    for (size_t j = 0; j < pillars->size; j++)
+    {
+      Pillar* pillar = dyn_arr_get(pillars, j);
+      if (isColliding(p->x - PLAYER_SHOTGUN_PELLET_SIZE * 0.5f,
+                      p->y - PLAYER_SHOTGUN_PELLET_SIZE * 0.5f, PLAYER_SHOTGUN_PELLET_SIZE,
+                      PLAYER_SHOTGUN_PELLET_SIZE, pillar->x, pillar->y, pillar->width,
+                      pillar->height))
+      {
+        hit = true;
+        break;
+      }
+    }
+
+    if (hit)
+    {
+      dyn_arr_pop_at(pellets, i);
+      i--;
+      continue;
+    }
 
     const float dx = p->x - player->x;
     const float dy = p->y - player->y;

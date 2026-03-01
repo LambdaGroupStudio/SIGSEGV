@@ -78,8 +78,8 @@ void displayWindow(void)
     playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets,
                 &playerRockets);
 
-    updatePlayerARBullets(&player, &playerARBullets);
-    updatePlayerShotgunPellets(&player, &playerShotgunPellets);
+    updatePlayerARBullets(&player, &playerARBullets, &pillars);
+    updatePlayerShotgunPellets(&player, &playerShotgunPellets, &pillars);
     updatePlayerRockets(&player, &playerRockets, &pillars, &enemies, &playerExplosions);
     updatePlayerExplosions(&playerExplosions, &enemies);
 
