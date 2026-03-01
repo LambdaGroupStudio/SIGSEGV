@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "pillar.h"
 #include "utils/array.h"
+#include "enemy.h"
 
 // Forward declaration to break circular dependency with enemy.h
 typedef __DynArray Enemies;
@@ -23,6 +24,7 @@ typedef struct Player {
     enum { AR = 0, SHOTGUN = 1, ROCKET_LAUNCHER = 2 } weapon;
     float reloadTimer;
     float reloadSpeed;
+    int hp;
 } Player;
 
 typedef struct PlayerARBullet {
@@ -70,6 +72,9 @@ void initPlayerRockets(PlayerRockets* rockets);
 
 Player initPlayer(void);
 void displayPlayer(Player player);
+void takeDamage(Player* player, MeleeEnemyAttacks* attacks, RangedEnemyBullets* bullets);
+void diePlayer(void);
+
 void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
 void updatePlayerARBullets(PlayerARBullets* bullets);
 void displayPlayerARBullets(PlayerARBullets* bullets);

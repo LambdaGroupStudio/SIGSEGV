@@ -42,6 +42,7 @@ typedef struct RangedEnemyBullet {
   float targetX;
   float targetY;
   float speed;
+  int damage;
 } RangedEnemyBullet;
 
 typedef struct MeleeEnemyAttack {
@@ -51,6 +52,8 @@ typedef struct MeleeEnemyAttack {
     float height;
     float duration; // How long the attack hitbox should last
     float timer; // Timer to track how long the hitbox has been active
+    int damage;
+    bool hasDealtDamage;
 } MeleeEnemyAttack;
 
 typedef dyn_arr(Enemy) Enemies;

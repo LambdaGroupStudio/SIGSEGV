@@ -64,6 +64,7 @@ void displayWindow(void) {
         
         updatePlayer(&player, &pillars);
         updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets, &playerShotgunPellets, &playerRockets);
+        takeDamage(&player, &attacks, &bullets);
         
         Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
         playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets, &playerRockets);
@@ -87,6 +88,14 @@ void displayWindow(void) {
         displayPlayerRockets(&playerRockets);
         
         EndMode2D();
+
+        if (player.hp <= 0) {
+            const char* deathText = "SIGSEGV";
+            int fontSize = 100;
+            int textWidth = MeasureText(deathText, fontSize);
+            DrawText(deathText, GetScreenWidth()/2 - textWidth/2, GetScreenHeight()/2 - fontSize/2, fontSize, RED);
+        }
+
         if (player.weapon == AR) {
             DrawText("Weapon: Assault Rifle", 10, 10, 20, BLACK);
         } else if (player.weapon == SHOTGUN) {

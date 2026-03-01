@@ -26,4 +26,7 @@ extern float gravity;
 #define PLAYER_ROCKET_DAMAGE 160
 
 #define ENEMY_BULLET_SIZE 50.0f
-#define ENEMY_BULLET_SPEED 1.0f
+#define ENEMY_BULLET_SPEED 800.0f
+#define ENEMY_BULLET_DAMAGE 10
+
+#define ENEMY_MELEE_DAMAGE 20
