@@ -1,10 +1,10 @@
 ---
 Language: Cpp
 BasedOnStyle: LLVM
-IndentWidth: 2
-TabWidth: 2
-UseTab: Never
-BreakBeforeBraces: Allman
+IndentWidth: 4
+TabWidth: 3
+UseTab: Always
+BreakBeforeBraces: K&R
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 ColumnLimit: 100

@@ -68,19 +68,32 @@ typedef struct PlayerRocket
   int   explosionRadius;
 } PlayerRocket;
 
+typedef struct PlayerExplosion
+{
+  float x;
+  float y;
+  float radius;
+  float duration;
+  float timer;
+  int   damage;
+} PlayerExplosion;
+
 typedef dyn_arr(PlayerARBullet) PlayerARBullets;
 typedef dyn_arr(PlayerShotgunPellet) PlayerShotgunPellets;
 typedef dyn_arr(PlayerRocket) PlayerRockets;
+typedef dyn_arr(PlayerExplosion) PlayerExplosions;
 
 PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage);
 PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY,
                                             int damage);
 PlayerRocket        initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage,
                                      int explosionRadius);
+PlayerExplosion     initPlayerExplosion(float x, float y, float radius, int damage);
 
 void initPlayerARBullets(PlayerARBullets* bullets);
 void initPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void initPlayerRockets(PlayerRockets* rockets);
+void initPlayerExplosions(PlayerExplosions* explosions);
 
 Player initPlayer(void);
 void   displayPlayer(Player player);
@@ -99,10 +112,14 @@ void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void shotgunDealDamageToEnemies(PlayerShotgunPellets* pellets, Enemies* enemies);
 
-void updatePlayerRockets(Player* player, PlayerRockets* rockets);
+void updatePlayerRockets(Player* player, PlayerRockets* rockets, Pillars* pillars, Enemies* enemies, PlayerExplosions* explosions);
 void displayPlayerRockets(PlayerRockets* rockets);
 void freePlayerRockets(PlayerRockets* rockets);
-void rocketDealDamageToEnemies(PlayerRockets* rockets, Enemies* enemies, Pillars* pillars);
+
+void updatePlayerExplosions(PlayerExplosions* explosions, Enemies* enemies);
+void displayPlayerExplosions(PlayerExplosions* explosions);
+void freePlayerExplosions(PlayerExplosions* explosions);
+void triggerPlayerExplosion(PlayerExplosions* explosions, float x, float y, float radius, int damage);
 
 void handleMovement(Player* player);
 void handlePlayerCollisions(Player* player, Pillars* pillars);
