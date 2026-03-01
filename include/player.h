@@ -102,12 +102,12 @@ void   diePlayer(void);
 
 void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets,
                  PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
-void updatePlayerARBullets(Player* player, PlayerARBullets* bullets);
+void updatePlayerARBullets(Player* player, PlayerARBullets* bullets, Pillars* pillars);
 void displayPlayerARBullets(PlayerARBullets* bullets);
 void freePlayerARBullets(PlayerARBullets* bullets);
 void arDealDamageToEnemies(PlayerARBullets* bullets, Enemies* enemies);
 
-void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets);
+void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets, Pillars* pillars);
 void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void shotgunDealDamageToEnemies(PlayerShotgunPellets* pellets, Enemies* enemies);
