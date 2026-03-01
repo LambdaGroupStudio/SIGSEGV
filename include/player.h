@@ -1,6 +1,10 @@
 #pragma once
 #include <stdbool.h>
 #include "pillar.h"
+#include "utils/array.h"
+
+// Forward declaration to break circular dependency with enemy.h
+typedef __DynArray Enemies;
 
 typedef struct Player {
     float x;
@@ -28,6 +32,7 @@ typedef struct PlayerARBullet {
     float velocityY;
     int targetX;
     int targetY;
+    int damage;
 } PlayerARBullet;
 
 typedef struct PlayerShotgunPellet {
@@ -37,6 +42,7 @@ typedef struct PlayerShotgunPellet {
     float velocityY;
     int targetX;
     int targetY;
+    int damage;
 } PlayerShotgunPellet;
 
 typedef struct PlayerRocket {
@@ -46,15 +52,17 @@ typedef struct PlayerRocket {
     float velocityY;
     int targetX;
     int targetY;
+    int damage;
+    int explosionRadius;
 } PlayerRocket;
 
 typedef dyn_arr(PlayerARBullet) PlayerARBullets;
 typedef dyn_arr(PlayerShotgunPellet) PlayerShotgunPellets;
 typedef dyn_arr(PlayerRocket) PlayerRockets;
 
-PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY);
-PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY);
-PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY);
+PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage);
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY, int damage);
+PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage, int explosionRadius);
 
 void initPlayerARBullets(PlayerARBullets* bullets);
 void initPlayerShotgunPellets(PlayerShotgunPellets* pellets);
@@ -66,14 +74,17 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
 void updatePlayerARBullets(PlayerARBullets* bullets);
 void displayPlayerARBullets(PlayerARBullets* bullets);
 void freePlayerARBullets(PlayerARBullets* bullets);
+void arDealDamageToEnemies(PlayerARBullets* bullets, Enemies* enemies);
 
 void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets);
+void shotgunDealDamageToEnemies(PlayerShotgunPellets* pellets, Enemies* enemies);
 
 void updatePlayerRockets(PlayerRockets* rockets);
 void displayPlayerRockets(PlayerRockets* rockets);
 void freePlayerRockets(PlayerRockets* rockets);
+void rocketDealDamageToEnemies(PlayerRockets* rockets, Enemies* enemies, Pillars* pillars);
 
 void handleMovement(Player* player);
 void handlePlayerCollisions(Player* player, Pillars* pillars);

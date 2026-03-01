@@ -63,7 +63,7 @@ void displayWindow(void) {
         BeginMode2D(camera);
         
         updatePlayer(&player, &pillars);
-        updateEnemies(&enemies, &pillars, &player, &bullets, &attacks);
+        updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets, &playerShotgunPellets, &playerRockets);
         
         Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
         playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets, &playerRockets);

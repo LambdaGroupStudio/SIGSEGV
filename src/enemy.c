@@ -1,8 +1,9 @@
-#include "enemy.h"
 #include "raylib.h"
 #include "helpers.h"
 #include "pillar.h"
 #include "globals.h"
+#include "player.h"
+#include "enemy.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -26,9 +27,11 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
     if (type == 0) { // MELEE
         enemy.agroRangeBoxWidth = agroRangeBoxWidth;
         enemy.agroRangeBoxHeight = agroRangeBoxHeight;
+        enemy.hp = 200; // Melee enemies have more HP to compensate for being more aggressive
     } else if (type == 1) { // RANGED
         enemy.agroRangeBoxWidth = (int)(agroRangeBoxWidth * 1.5f); // Ranged enemies have larger agro range
         enemy.agroRangeBoxHeight = (int)(agroRangeBoxHeight * 1.5f);
+        enemy.hp = 100; // Ranged enemies have less HP to compensate for being less aggressive
     }
 
     enemy.isGrounded = isGrounded;
@@ -98,6 +101,14 @@ void generateEnemies(Enemies* enemies, Pillars* pillars) {
         }
     }
     printf("DEBUG: Generated %d enemies on %zu pillars\n", totalSpawns, pillars->size);
+}
+
+void enemyDeath(Enemies* enemies, int id) {
+    freeEnemy(enemies, id);
+}
+
+bool isDead(Enemy* enemy) {
+    return enemy->hp <= 0;
 }
 
 void displayEnemies(Enemies* enemies) {
@@ -446,7 +457,11 @@ void displayMeleeEnemyAttacks(MeleeEnemyAttacks *attacks) {
     }
 }
 
-void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks) {
+void enemyTakeDamage(Enemy* enemy, int damage) {
+    enemy->hp -= damage;
+}
+
+void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets) {
     for (size_t i = 0; i < enemies->size; i++) {
         Enemy* e = dyn_arr_get(enemies, i);
 
@@ -479,6 +494,34 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
             if (isColliding(e->x - attackRange, e->y, e->width + 2 * attackRange, e->height,
                             player->x, player->y, player->width, player->height)) {
                 meleeEnemyAttack(e, attacks);
+            }
+        }
+        if (isDead(e)) {
+            enemyDeath(enemies, e->id);
+            i--; // Adjust index after removal
+        }
+        for (size_t j = 0; j < arBullets->size; j++) {
+            PlayerARBullet* b = dyn_arr_get(arBullets, j);
+            if (isColliding(b->x, b->y, 10, 10, e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, b->damage);
+                dyn_arr_pop_at(arBullets, j);
+                j--;
+            }
+        }
+        for (size_t j = 0; j < shotgunPellets->size; j++) {
+            PlayerShotgunPellet* p = dyn_arr_get(shotgunPellets, j);
+            if (isColliding(p->x, p->y, 10, 10, e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, p->damage);
+                dyn_arr_pop_at(shotgunPellets, j);
+                j--;
+            }
+        }
+        for (size_t j = 0; j < rockets->size; j++) {
+            PlayerRocket* r = dyn_arr_get(rockets, j);
+            float explosionRadius = r->explosionRadius;
+            if (isColliding(r->x - explosionRadius, r->y - explosionRadius, explosionRadius * 2, explosionRadius * 2,
+                            e->x, e->y, e->width, e->height)) {
+                enemyTakeDamage(e, r->damage);
             }
         }
     }
