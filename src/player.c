@@ -4,30 +4,34 @@
 #include "helpers.h"
 #include <math.h>
 
-PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY) {
+PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage) {
     PlayerARBullet bullet;
     bullet.x = x;
     bullet.y = y;
     bullet.velocityX = velocityX;
     bullet.velocityY = velocityY;
+    bullet.damage = damage;
     return bullet;
 }
 
-PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY) {
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY, int damage) {
     PlayerShotgunPellet pellet;
     pellet.x = x;
     pellet.y = y;
     pellet.velocityX = velocityX;
     pellet.velocityY = velocityY;
+    pellet.damage = damage;
     return pellet;
 }
 
-PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY) {
+PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage, int explosionRadius) {
     PlayerRocket rocket;
     rocket.x = x;
     rocket.y = y;
     rocket.velocityX = velocityX;
     rocket.velocityY = velocityY;
+    rocket.damage = damage;
+    rocket.explosionRadius = explosionRadius;
     return rocket;
 }
 
@@ -106,13 +110,13 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
                 float spread = PLAYER_SHOTGUN_SPREAD;
                 for (int i = 0; i < pelletCount; i++) {
                     float angle = atan2f(dirY, dirX) + ((float)rand() / (float)RAND_MAX - 0.5f) * spread;
-                    PlayerShotgunPellet pellet = initPlayerShotgunPellet(px, py, cosf(angle) * speed, sinf(angle) * speed);
+                    PlayerShotgunPellet pellet = initPlayerShotgunPellet(px, py, cosf(angle) * speed, sinf(angle) * speed , PLAYER_SHOTGUN_DAMAGE);
                     dyn_arr_push_back(shotgunPellets, &pellet);
                 }
                 player->reloadTimer = PLAYER_SHOTGUN_RELOAD; // Slow fire rate
             } else if (player->weapon == ROCKET_LAUNCHER) {
                 float speed = PLAYER_ROCKET_SPEED;
-                PlayerRocket rocket = initPlayerRocket(px, py, dirX * speed, dirY * speed);
+                PlayerRocket rocket = initPlayerRocket(px, py, dirX * speed, dirY * speed, PLAYER_ROCKET_DAMAGE, 100); // Explosion radius of 100
                 dyn_arr_push_back(rockets, &rocket);
                 player->reloadTimer = PLAYER_ROCKET_RELOAD; // Very slow fire rate
             }
