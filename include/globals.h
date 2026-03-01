@@ -32,3 +32,5 @@ extern float gravity;
 #define ENEMY_BULLET_DAMAGE 10
 
 #define ENEMY_MELEE_DAMAGE 20
+
+typedef enum {MAIN_MENU = 0, GAME = 1, DEAD = 2} GameState;

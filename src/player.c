@@ -548,15 +548,14 @@ void updatePlayer(Player* player, Pillars* pillars)
     diePlayer();
     return;
   }
-  handlePlayerCollisions(player, pillars);
   handleMovement(player);
   handleJump(player);
   handlePlayerGravity(player);
+  handlePlayerCollisions(player, pillars);
   handleGunStateMachine(player);
   player->reloadTimer -= deltaTime;
   if (player->reloadTimer < 0.0f)
     player->reloadTimer = 0.0f;
-  displayPlayer(*player);
 }
 
 Player initPlayer(void)
