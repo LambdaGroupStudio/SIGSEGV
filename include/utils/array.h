@@ -22,7 +22,7 @@ typedef size_t bytes_t; /* number of bytes         */
 */
 typedef struct
 {
-  void*       arr_data;
+  void*   arr_data;
   count_t size;
   count_t capacity;
   bytes_t elem_size;
@@ -118,7 +118,8 @@ inline static const void* dyn_arr_get_data_const(const __DynArray* a)
   return a->arr_data;
 }
 
-// Get typed pointer to entire array (read/write) - so not recommended to use this but well it exists
+// Get typed pointer to entire array (read/write) - so not recommended to use this but well it
+// exists
 #define __arr_get_data(a, T) ((T*)((a) && (a)->arr_data ? (a)->arr_data : NULL))
 
 // Set element at a particular index in array
@@ -142,34 +143,32 @@ inline static bool dyn_arr_exists(const __DynArray* array)
 // to the right then placing the new element
 inline static void dyn_arr_push_at(__DynArray* a, index_t idx, const void* elem)
 {
-    if (!a || !elem)
-        return;
+  if (!a || !elem)
+    return;
 
-    if (idx > a->size)
-        idx = a->size;
+  if (idx > a->size)
+    idx = a->size;
 
-    // check if cap is valid
-    if (a->size == a->capacity)
-        dyn_arr_reserve(a, a->capacity ? a->capacity * 2 : 8);
+  // check if cap is valid
+  if (a->size == a->capacity)
+    dyn_arr_reserve(a, a->capacity ? a->capacity * 2 : 8);
 
-    memmove((char*)a->arr_data + (idx + 1) * a->elem_size,
-        (char*)a->arr_data + idx * a->elem_size,
-        (a->size - idx) * a->elem_size
-    );
+  memmove((char*)a->arr_data + (idx + 1) * a->elem_size, (char*)a->arr_data + idx * a->elem_size,
+          (a->size - idx) * a->elem_size);
 
-    memcpy((char*)a->arr_data + idx * a->elem_size,elem,a->elem_size);
+  memcpy((char*)a->arr_data + idx * a->elem_size, elem, a->elem_size);
 
-    a->size++;
+  a->size++;
 }
 
 // pop element at a particular index
 inline static void dyn_arr_pop_at(__DynArray* a, index_t idx)
 {
-    if (!a || idx >= a->size)
-        return;
+  if (!a || idx >= a->size)
+    return;
 
-    if (idx != a->size - 1)
-        dyn_arr_set(a, idx, dyn_arr_get(a, a->size - 1));
+  if (idx != a->size - 1)
+    dyn_arr_set(a, idx, dyn_arr_get(a, a->size - 1));
 
-    a->size--;
+  a->size--;
 }

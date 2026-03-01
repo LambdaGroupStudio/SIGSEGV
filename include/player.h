@@ -1,61 +1,70 @@
 #pragma once
-#include <stdbool.h>
+#include "enemy.h"
 #include "pillar.h"
 #include "utils/array.h"
-#include "enemy.h"
+#include <stdbool.h>
 
 // Forward declaration to break circular dependency with enemy.h
 typedef __DynArray Enemies;
 
-typedef struct Player {
-    float x;
-    float y;
-    float lastX;
-    float lastY;
-    int width;
-    int height;
-    float acceleration;
-    float friction;
-    float velocityX;
-    float velocityY;
-    float maxSpeed;
-    float jumpStrength;
-    bool isGrounded;
-    enum { AR = 0, SHOTGUN = 1, ROCKET_LAUNCHER = 2 } weapon;
-    float reloadTimer;
-    float reloadSpeed;
-    int hp;
+typedef struct Player
+{
+  float x;
+  float y;
+  float lastX;
+  float lastY;
+  int   width;
+  int   height;
+  float acceleration;
+  float friction;
+  float velocityX;
+  float velocityY;
+  float maxSpeed;
+  float jumpStrength;
+  bool  isGrounded;
+  enum
+  {
+    AR              = 0,
+    SHOTGUN         = 1,
+    ROCKET_LAUNCHER = 2
+  } weapon;
+  float reloadTimer;
+  float reloadSpeed;
+  int   hp;
 } Player;
 
-typedef struct PlayerARBullet {
-    float x;
-    float y;
-    float velocityX;
-    float velocityY;
-    int targetX;
-    int targetY;
-    int damage;
+typedef struct PlayerARBullet
+{
+  float x;
+  float y;
+  float velocityX;
+  float velocityY;
+  int   targetX;
+  int   targetY;
+  int   damage;
 } PlayerARBullet;
 
-typedef struct PlayerShotgunPellet {
-    float x;
-    float y;
-    float velocityX;
-    float velocityY;
-    int targetX;
-    int targetY;
-    int damage;
+typedef struct PlayerShotgunPellet
+{
+  float x;
+  float y;
+  float velocityX;
+  float velocityY;
+  int   targetX;
+  int   targetY;
+  int   damage;
 } PlayerShotgunPellet;
 
-typedef struct PlayerRocket {
-    float x;
-    float y;
-    float velocityX;
-    float velocityY;
-    int targetX;
-    int targetY;
-    int damage;
-    int explosionRadius;
+typedef struct PlayerRocket
+{
+  float x;
+  float y;
+  float velocityX;
+  float velocityY;
+  int   targetX;
+  int   targetY;
+  int   damage;
+  int   explosionRadius;
 } PlayerRocket;
 
 typedef dyn_arr(PlayerARBullet) PlayerARBullets;
@@ -63,19 +72,22 @@ typedef dyn_arr(PlayerShotgunPellet) PlayerShotgunPellets;
 typedef dyn_arr(PlayerRocket) PlayerRockets;
 
 PlayerARBullet initPlayerARBullet(float x, float y, float velocityX, float velocityY, int damage);
-PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY, int damage);
-PlayerRocket initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage, int explosionRadius);
+PlayerShotgunPellet initPlayerShotgunPellet(float x, float y, float velocityX, float velocityY,
+                                            int damage);
+PlayerRocket        initPlayerRocket(float x, float y, float velocityX, float velocityY, int damage,
+                                     int explosionRadius);
 
 void initPlayerARBullets(PlayerARBullets* bullets);
 void initPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void initPlayerRockets(PlayerRockets* rockets);
 
 Player initPlayer(void);
-void displayPlayer(Player player);
-void takeDamage(Player* player, MeleeEnemyAttacks* attacks, RangedEnemyBullets* bullets);
-void diePlayer(void);
+void   displayPlayer(Player player);
+void   takeDamage(Player* player, MeleeEnemyAttacks* attacks, RangedEnemyBullets* bullets);
+void   diePlayer(void);
 
-void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets, PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
+void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets,
+                 PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
 void updatePlayerARBullets(PlayerARBullets* bullets);
 void displayPlayerARBullets(PlayerARBullets* bullets);
 void freePlayerARBullets(PlayerARBullets* bullets);
