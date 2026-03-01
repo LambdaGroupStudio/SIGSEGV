@@ -147,8 +147,7 @@ void handleGunStateMachine(Player* player)
 void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets,
                  PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets)
 {
-  // only fire when button is held AND weapon is ready
-  if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON) || player->reloadTimer > 0.0f)
+  if (!player->wantsToShoot || player->reloadTimer > 0.0f)
     return;
 
   float px = player->x + player->width * 0.5f;
@@ -207,7 +206,7 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
   }
 }
 
-void updatePlayerARBullets(PlayerARBullets* bullets)
+void updatePlayerARBullets(Player* player, PlayerARBullets* bullets)
 {
   for (size_t i = 0; i < bullets->size; i++)
   {
@@ -215,8 +214,17 @@ void updatePlayerARBullets(PlayerARBullets* bullets)
     b->x += b->velocityX * deltaTime;
     b->y += b->velocityY * deltaTime;
 
-    if (b->x < -PROJECTILE_CLEANUP_THRESHOLD || b->x > PROJECTILE_CLEANUP_THRESHOLD ||
-        b->y < -PROJECTILE_CLEANUP_THRESHOLD || b->y > PROJECTILE_CLEANUP_THRESHOLD)
+    // we update wrt player space (with max bounds based on world)
+    //
+    // calculate dx and dy and solve
+    // the distance eqn (if too far) we
+    // pop the projectile
+    //
+    // same logic applies for pellets and rockets
+    const float dx = b->x - player->x;
+    const float dy = b->y - player->y;
+
+    if (dx * dx + dy * dy > PROJECTILE_CLEANUP_THRESHOLD_SQUARED)
     {
       dyn_arr_pop_at(bullets, i);
       i--;
@@ -235,7 +243,7 @@ void displayPlayerARBullets(PlayerARBullets* bullets)
 
 void freePlayerARBullets(PlayerARBullets* bullets) { dyn_arr_free(bullets); }
 
-void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets)
+void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets)
 {
   for (size_t i = 0; i < pellets->size; i++)
   {
@@ -243,8 +251,10 @@ void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets)
     p->x += p->velocityX * deltaTime;
     p->y += p->velocityY * deltaTime;
 
-    if (p->x < -PROJECTILE_CLEANUP_THRESHOLD || p->x > PROJECTILE_CLEANUP_THRESHOLD ||
-        p->y < -PROJECTILE_CLEANUP_THRESHOLD || p->y > PROJECTILE_CLEANUP_THRESHOLD)
+    const float dx = p->x - player->x;
+    const float dy = p->y - player->y;
+
+    if (dx * dx + dy * dy > PROJECTILE_CLEANUP_THRESHOLD_SQUARED)
     {
       dyn_arr_pop_at(pellets, i);
       i--;
@@ -263,7 +273,7 @@ void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets)
 
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets) { dyn_arr_free(pellets); }
 
-void updatePlayerRockets(PlayerRockets* rockets)
+void updatePlayerRockets(Player* player, PlayerRockets* rockets)
 {
   for (size_t i = 0; i < rockets->size; i++)
   {
@@ -271,8 +281,10 @@ void updatePlayerRockets(PlayerRockets* rockets)
     r->x += r->velocityX * deltaTime;
     r->y += r->velocityY * deltaTime;
 
-    if (r->x < -PROJECTILE_CLEANUP_THRESHOLD || r->x > PROJECTILE_CLEANUP_THRESHOLD ||
-        r->y < -PROJECTILE_CLEANUP_THRESHOLD || r->y > PROJECTILE_CLEANUP_THRESHOLD)
+    float dx = r->x - player->x;
+    float dy = r->y - player->y;
+
+    if (dx * dx + dy * dy > PROJECTILE_CLEANUP_THRESHOLD_SQUARED)
     {
       dyn_arr_pop_at(rockets, i);
       i--;
@@ -417,6 +429,7 @@ Player initPlayer(void)
   player.maxSpeed     = 600.0f;
   player.jumpStrength = 600.0f;
   player.isGrounded   = false;
+  player.wantsToShoot = false;
   player.reloadTimer  = 0.0f;
   player.reloadSpeed  = 1.0f;
   player.weapon       = AR;

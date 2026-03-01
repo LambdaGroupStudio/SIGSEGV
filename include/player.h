@@ -22,6 +22,7 @@ typedef struct Player
   float maxSpeed;
   float jumpStrength;
   bool  isGrounded;
+  bool  wantsToShoot;
   enum
   {
     AR              = 0,
@@ -88,17 +89,17 @@ void   diePlayer(void);
 
 void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* arBullets,
                  PlayerShotgunPellets* shotgunPellets, PlayerRockets* rockets);
-void updatePlayerARBullets(PlayerARBullets* bullets);
+void updatePlayerARBullets(Player* player, PlayerARBullets* bullets);
 void displayPlayerARBullets(PlayerARBullets* bullets);
 void freePlayerARBullets(PlayerARBullets* bullets);
 void arDealDamageToEnemies(PlayerARBullets* bullets, Enemies* enemies);
 
-void updatePlayerShotgunPellets(PlayerShotgunPellets* pellets);
+void updatePlayerShotgunPellets(Player* player, PlayerShotgunPellets* pellets);
 void displayPlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void freePlayerShotgunPellets(PlayerShotgunPellets* pellets);
 void shotgunDealDamageToEnemies(PlayerShotgunPellets* pellets, Enemies* enemies);
 
-void updatePlayerRockets(PlayerRockets* rockets);
+void updatePlayerRockets(Player* player, PlayerRockets* rockets);
 void displayPlayerRockets(PlayerRockets* rockets);
 void freePlayerRockets(PlayerRockets* rockets);
 void rocketDealDamageToEnemies(PlayerRockets* rockets, Enemies* enemies, Pillars* pillars);

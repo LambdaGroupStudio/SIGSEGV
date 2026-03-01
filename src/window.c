@@ -66,7 +66,7 @@ void displayWindow(void)
     BeginDrawing();
     ClearBackground(RAYWHITE);
     BeginMode2D(camera);
-
+    player.wantsToShoot = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
     updatePlayer(&player, &pillars);
     updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets,
                   &playerShotgunPellets, &playerRockets);
@@ -76,9 +76,9 @@ void displayWindow(void)
     playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets, &playerShotgunPellets,
                 &playerRockets);
 
-    updatePlayerARBullets(&playerARBullets);
-    updatePlayerShotgunPellets(&playerShotgunPellets);
-    updatePlayerRockets(&playerRockets);
+    updatePlayerARBullets(&player, &playerARBullets);
+    updatePlayerShotgunPellets(&player, &playerShotgunPellets);
+    updatePlayerRockets(&player, &playerRockets);
 
     updateBullets(&bullets);
     updateMeleeEnemyAttacks(&attacks);
