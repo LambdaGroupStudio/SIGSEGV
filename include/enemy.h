@@ -24,6 +24,7 @@ typedef struct Enemy {
   int agroRangeBoxHeight;
   bool isGrounded;
   bool isFleeing;
+  int hp;
   enum { MELEE = 0, RANGED = 1 } type;
   enum { IDLE = 0, LEFT = 1, RIGHT = 2 } direction;
 } Enemy;
@@ -61,6 +62,8 @@ void displayEnemies(Enemies *enemies);
 void handlePlayerStateMachine(Player* player);
 void freeEnemies(Enemies *enemies);
 void freeEnemy(Enemies *enemies, int id);
+bool isDead(Enemy* enemy);
+void enemyDeath(Enemies* enemies, int id);
 
 void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks);
 

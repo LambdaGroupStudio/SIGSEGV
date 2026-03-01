@@ -26,9 +26,11 @@ Enemy initEnemy(float x, float y, float speed, int width, int height, int type, 
     if (type == 0) { // MELEE
         enemy.agroRangeBoxWidth = agroRangeBoxWidth;
         enemy.agroRangeBoxHeight = agroRangeBoxHeight;
+        enemy.hp = 200; // Melee enemies have more HP to compensate for being more aggressive
     } else if (type == 1) { // RANGED
         enemy.agroRangeBoxWidth = (int)(agroRangeBoxWidth * 1.5f); // Ranged enemies have larger agro range
         enemy.agroRangeBoxHeight = (int)(agroRangeBoxHeight * 1.5f);
+        enemy.hp = 100; // Ranged enemies have less HP to compensate for being less aggressive
     }
 
     enemy.isGrounded = isGrounded;
@@ -98,6 +100,14 @@ void generateEnemies(Enemies* enemies, Pillars* pillars) {
         }
     }
     printf("DEBUG: Generated %d enemies on %zu pillars\n", totalSpawns, pillars->size);
+}
+
+void enemyDeath(Enemies* enemies, int id) {
+    freeEnemy(enemies, id);
+}
+
+bool isDead(Enemy* enemy) {
+    return enemy->hp <= 0;
 }
 
 void displayEnemies(Enemies* enemies) {
@@ -480,6 +490,10 @@ void updateEnemies(Enemies *enemies, Pillars *pillars, Player* player, RangedEne
                             player->x, player->y, player->width, player->height)) {
                 meleeEnemyAttack(e, attacks);
             }
+        }
+        if (isDead(e)) {
+            enemyDeath(enemies, e->id);
+            i--; // Adjust index after removal
         }
     }
 }
