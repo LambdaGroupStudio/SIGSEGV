@@ -3,8 +3,56 @@
 #include "globals.h"
 #include "pillar.h"
 #include "player.h"
+#include "helpers.h"
 #include <assert.h>
 #include <stdio.h> 
+#include <time.h>
+
+static void rebuildWorld(Player* player, Pillars* pillars, Enemies* enemies,
+                         RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks,
+                         PlayerARBullets* playerARBullets, PlayerShotgunPellets* playerShotgunPellets,
+                         PlayerRockets* playerRockets, PlayerExplosions* playerExplosions)
+{
+  // First free any existing dynamic arrays
+  freePillars(pillars);
+  freeEnemies(enemies);
+  freeRangedEnemyBullets(bullets);
+  freeMeleeEnemyAttacks(attacks);
+  freePlayerARBullets(playerARBullets);
+  freePlayerShotgunPellets(playerShotgunPellets);
+  freePlayerRockets(playerRockets);
+  freePlayerExplosions(playerExplosions);
+
+  // Initialize new dynamic arrays
+  initPillars(pillars);
+  initEnemies(enemies);
+  initRangedEnemyBullets(bullets);
+  initMeleeEnemyAttacks(attacks);
+  initPlayerARBullets(playerARBullets);
+  initPlayerShotgunPellets(playerShotgunPellets);
+  initPlayerRockets(playerRockets);
+  initPlayerExplosions(playerExplosions);
+
+  // Set the random seed so that each generation is unique
+  SetRandomSeed((unsigned int)time(NULL));
+
+  // Initialize player
+  *player = initPlayer();
+  // Spawn player centered above the first pillar
+  player->x = PLAYER_SPAWN_X;
+  player->y = PLAYER_SPAWN_Y;
+
+  Pillar initialPillar = initPillar(STARTING_PILLAR_WIDTH, STARTING_PILLAR_HEIGHT, 
+                                   STARTING_PILLAR_X, STARTING_PILLAR_Y);
+  addPillar(pillars, &initialPillar);
+
+  // Generation
+  generatePillars(pillars, PILLAR_COUNT);
+  generateEnemies(enemies, pillars);
+
+  // Reset clock
+  gameTimer = INITIAL_GAME_TIMER;
+}
 
 void initWindow(void)
 {
@@ -19,44 +67,34 @@ void initWindow(void)
 
   InitWindow(width, height, "SIGSEGV");
   ToggleFullscreen();
+  SetRandomSeed((unsigned int)time(NULL));
 }
 
 void displayWindow(void)
 {
-  Player player = initPlayer();
-  // Spawn player centered above the first pillar
-  // First pillar: x=-200, width=850, y=500. Center = -200 + 425 = 225. 
-  // Player width=100. Spawn x = 225 - 50 = 175.
-  // Spawn y = pillar.y - player.height = 500 - 100 = 400.
-  player.x = 175.0f;
-  player.y = 400.0f;
-
+  Player player;
   Pillars pillars;
-  initPillars(&pillars);
   Enemies enemies;
-  initEnemies(&enemies);
   RangedEnemyBullets bullets;
-  initRangedEnemyBullets(&bullets);
   MeleeEnemyAttacks attacks;
-  initMeleeEnemyAttacks(&attacks);
-
   PlayerARBullets playerARBullets;
-  initPlayerARBullets(&playerARBullets);
   PlayerShotgunPellets playerShotgunPellets;
-  initPlayerShotgunPellets(&playerShotgunPellets);
   PlayerRockets playerRockets;
-  initPlayerRockets(&playerRockets);
   PlayerExplosions playerExplosions;
+
+  // Initialize variables to a safe, empty state before the loop
+  initPillars(&pillars);
+  initEnemies(&enemies);
+  initRangedEnemyBullets(&bullets);
+  initMeleeEnemyAttacks(&attacks);
+  initPlayerARBullets(&playerARBullets);
+  initPlayerShotgunPellets(&playerShotgunPellets);
+  initPlayerRockets(&playerRockets);
   initPlayerExplosions(&playerExplosions);
 
-  Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
-
-  // Add starting pillar
-  addPillar(&pillars, &initialPillar);
-
-  generatePillars(&pillars, 60);
-
-  generateEnemies(&enemies, &pillars);
+  // Generate initial world
+  rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+               &playerShotgunPellets, &playerRockets, &playerExplosions);
 
   Camera2D camera       = {0};
   int      monitor      = GetCurrentMonitor();
@@ -66,8 +104,6 @@ void displayWindow(void)
   camera.offset         = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.rotation       = 0.0f;
   camera.zoom           = 0.7f;
-
-  gameTimer = INITIAL_GAME_TIMER;
 
   GameState gameState = MAIN_MENU;
 
@@ -81,6 +117,8 @@ void displayWindow(void)
       {
         if (IsKeyPressed(KEY_ENTER))
         {
+          rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+                       &playerShotgunPellets, &playerRockets, &playerExplosions);
           gameState = GAME;
         }
 
@@ -100,7 +138,6 @@ void displayWindow(void)
         {
           gameState = DEAD;
         }
-
 
         player.wantsToShoot = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
         updatePlayer(&player, &pillars);
@@ -123,6 +160,21 @@ void displayWindow(void)
         updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets,
                       &playerShotgunPellets, &playerRockets);
         takeDamage(&player, &attacks, &bullets);
+
+        // Check for win condition: touching the final (right-most) pillar 
+        // Tolerant check for standing on it: use a 1 pixel buffer specifically here
+        if (pillars.size > 0 && gameState == GAME)
+        {
+          Pillar* finalPillar = dyn_arr_get(&pillars, pillars.size - 1);
+          if (player.x < finalPillar->x + finalPillar->width && 
+              player.x + player.width > finalPillar->x && 
+              player.y + player.height > finalPillar->y - 1.0f && // Slightly above top is ok
+              player.y < finalPillar->y + finalPillar->height)
+          {
+            gameState = WON;
+            exitTimer = 3.9f;
+          }
+        }
 
         // Update camera target after all calculations
         camera.target = (Vector2){player.x + player.width / 2.0f, player.y + player.height / 2.0f};
@@ -181,12 +233,8 @@ void displayWindow(void)
       {
         if (IsKeyPressed(KEY_R))
         {
-          // Simple reset: re-init everything
-          player = initPlayer();
-          player.x = 175.0f;
-          player.y = 400.0f;
-          gameTimer = INITIAL_GAME_TIMER;
-          // Ideally we would clear arrays here too, but let's keep it simple for now
+          rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+                       &playerShotgunPellets, &playerRockets, &playerExplosions);
           gameState = GAME;
         }
 
@@ -202,8 +250,33 @@ void displayWindow(void)
         EndDrawing();
         break;
       }
+
+      case WON:
+      {
+        exitTimer -= deltaTime;
+        if (exitTimer <= 0.0f)
+        {
+          goto cleanup; // Exit the game loop
+        }
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+        
+        const char* winText = "VIRUS REPELLED";
+        int fontSize = 60;
+        DrawText(winText, screenWidth / 2 - MeasureText(winText, fontSize) / 2, screenHeight / 2 - 50, fontSize, GREEN);
+        
+        char exitText[64];
+        sprintf(exitText, "EXITING IN %d...", (int)exitTimer);
+        DrawText(exitText, screenWidth / 2 - MeasureText(exitText, 30) / 2, screenHeight / 2 + 50, 30, RAYWHITE);
+        
+        EndDrawing();
+        break;
+      }
     }
   }
+
+cleanup:
     freeEnemies(&enemies);
     freePillars(&pillars);
     freeRangedEnemyBullets(&bullets);
@@ -212,4 +285,5 @@ void displayWindow(void)
     freePlayerShotgunPellets(&playerShotgunPellets);
     freePlayerRockets(&playerRockets);
     freePlayerExplosions(&playerExplosions);
+    CloseWindow();
 }

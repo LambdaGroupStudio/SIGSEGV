@@ -46,7 +46,7 @@ PlayerExplosion initPlayerExplosion(float x, float y, float radius, int damage)
   explosion.x        = x;
   explosion.y        = y;
   explosion.radius   = radius;
-  explosion.duration = 0.5f;
+  explosion.duration = PLAYER_EXPLOSION_DURATION;
   explosion.timer    = 0.0f;
   explosion.damage   = damage;
   return explosion;
@@ -212,7 +212,7 @@ void playerShoot(Player* player, float targetX, float targetY, PlayerARBullets* 
     case ROCKET_LAUNCHER:
     {
       PlayerRocket rocket = initPlayerRocket(px, py, dirX * PLAYER_ROCKET_SPEED,
-                                             dirY * PLAYER_ROCKET_SPEED, PLAYER_ROCKET_DAMAGE, 100);
+                                             dirY * PLAYER_ROCKET_SPEED, PLAYER_ROCKET_DAMAGE, PLAYER_ROCKET_EXPLOSION_RADIUS);
       dyn_arr_push_back(rockets, &rocket);
       player->reloadTimer = PLAYER_ROCKET_RELOAD;
       break;
@@ -452,7 +452,7 @@ void triggerPlayerExplosion(PlayerExplosions* explosions, float x, float y, floa
 void handlePlayerCollisions(Player* player, Pillars* pillars)
 {
   player->isGrounded = false;
-  float buffer       = 10.0f;
+  float buffer       = PLAYER_COLLISION_BUFFER;
 
   player->x += player->velocityX * deltaTime;
 
@@ -520,14 +520,27 @@ void handlePlayerCollisions(Player* player, Pillars* pillars)
     player->y         = -1000.0f;
     player->velocityY = 0.0f;
   }
+
+  if (player->isGrounded)
+  {
+    player->canDoubleJump = true;
+  }
 }
 
 void handleJump(Player* player)
 {
-  if (IsKeyPressed(KEY_SPACE) && player->isGrounded)
+  if (IsKeyPressed(KEY_SPACE))
   {
-    player->velocityY  = -player->jumpStrength;
-    player->isGrounded = false;
+    if (player->isGrounded)
+    {
+      player->velocityY  = -player->jumpStrength;
+      player->isGrounded = false;
+    }
+    else if (player->canDoubleJump)
+    {
+      player->velocityY     = -player->jumpStrength;
+      player->canDoubleJump = false;
+    }
   }
 }
 
@@ -562,21 +575,22 @@ void updatePlayer(Player* player, Pillars* pillars)
 Player initPlayer(void)
 {
   Player player       = {0};
-  player.x            = 100.0f;
-  player.y            = 100.0f;
-  player.width        = 100.0f;
-  player.height       = 100.0f;
+  player.x            = PLAYER_START_X;
+  player.y            = PLAYER_START_Y;
+  player.width        = PLAYER_WIDTH;
+  player.height       = PLAYER_HEIGHT;
   player.velocityX    = 0.0f;
   player.velocityY    = 0.0f;
-  player.acceleration = 2000.0f;
-  player.friction     = 1500.0f;
-  player.maxSpeed     = 600.0f;
-  player.jumpStrength = 600.0f;
+  player.acceleration = PLAYER_ACCELERATION;
+  player.friction     = PLAYER_FRICTION;
+  player.maxSpeed     = PLAYER_MAX_SPEED;
+  player.jumpStrength = PLAYER_JUMP_STRENGTH;
   player.isGrounded   = false;
   player.wantsToShoot = false;
   player.reloadTimer  = 0.0f;
   player.reloadSpeed  = 1.0f;
   player.weapon       = AR;
-  player.hp           = 100;
+  player.canDoubleJump = true;
+  player.hp           = PLAYER_HP;
   return player;
 }
