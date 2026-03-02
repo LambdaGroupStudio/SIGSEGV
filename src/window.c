@@ -104,20 +104,13 @@ void displayWindow(void)
 
         player.wantsToShoot = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
         updatePlayer(&player, &pillars);
-        updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets,
-                      &playerShotgunPellets, &playerRockets);
-        takeDamage(&player, &attacks, &bullets);
 
-        gameTimer -= deltaTime;
-        if (gameTimer <= 0.0f)
+        if (player.wantsToShoot)
         {
-          gameTimer = 0.0f;
-          gameState = DEAD;
+          Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+          playerShoot(&player, mousePos.x, mousePos.y, &playerARBullets, &playerShotgunPellets,
+                      &playerRockets);
         }
-
-        Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
-        playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets,
-                    &playerShotgunPellets, &playerRockets);
 
         updatePlayerARBullets(&player, &playerARBullets, &pillars);
         updatePlayerShotgunPellets(&player, &playerShotgunPellets, &pillars);
@@ -127,8 +120,19 @@ void displayWindow(void)
         updateBullets(&bullets, &player);
         updateMeleeEnemyAttacks(&attacks);
 
+        updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets,
+                      &playerShotgunPellets, &playerRockets);
+        takeDamage(&player, &attacks, &bullets);
+
         // Update camera target after all calculations
         camera.target = (Vector2){player.x + player.width / 2.0f, player.y + player.height / 2.0f};
+
+        gameTimer -= deltaTime;
+        if (gameTimer <= 0.0f)
+        {
+          gameTimer = 0.0f;
+          gameState = DEAD;
+        }
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
