@@ -129,11 +129,6 @@ void displayEnemies(Enemies* enemies)
     Enemy* e     = dyn_arr_get(enemies, i);
     Color  color = (e->type == 0) ? BLUE : GREEN;
     DrawRectangle((int)e->x, (int)e->y, e->width, e->height, color);
-
-    // Debug agro box
-    DrawRectangleLines((int)(e->x - e->agroRangeBoxWidth / 2.0f + e->width / 2.0f),
-                       (int)(e->y - e->agroRangeBoxHeight / 2.0f + e->height / 2.0f),
-                       e->agroRangeBoxWidth, e->agroRangeBoxHeight, RED);
   }
 }
 
@@ -512,6 +507,7 @@ RangedEnemyBullet initEnemyBullet(float x, float y, float velocityX, float veloc
   bullet.targetY   = targetY;
   bullet.speed     = speed;
   bullet.damage    = ENEMY_BULLET_DAMAGE;
+  bullet.hasHit    = false;
   return bullet;
 }
 
@@ -525,47 +521,56 @@ void enemyShoot(Enemy* enemy, RangedEnemyBullets* bullets, Player* player)
   if (enemy->reloadTimer > 0)
     return;
 
-  RangedEnemyBullet bullet;
-  bullet.x       = enemy->x;
-  bullet.y       = enemy->y;
-  bullet.targetX = player->x;
-  bullet.targetY = player->y;
-
   // Face the player when shooting
   if (player->x < enemy->x)
     enemy->direction = LEFT;
   else if (player->x > enemy->x)
     enemy->direction = RIGHT;
 
-  bullet.speed = ENEMY_BULLET_SPEED;
+  float dx = player->x - enemy->x;
+  float dy = player->y - enemy->y;
+  float dist = sqrtf(dx * dx + dy * dy);
 
-  float dx = player->x - bullet.x;
-  float dy = player->y - bullet.y;
-
-  float dist = sqrt(dx * dx + dy * dy);
-
+  float velX = 0, velY = 0;
   if (dist > 0)
   {
-    bullet.velocityX = (dx / dist) * bullet.speed;
-    bullet.velocityY = (dy / dist) * bullet.speed;
-  }
-  else
-  {
-    bullet.velocityX = 0;
-    bullet.velocityY = 0;
+    velX = (dx / dist) * ENEMY_BULLET_SPEED;
+    velY = (dy / dist) * ENEMY_BULLET_SPEED;
   }
 
+  // Use the initialization helper to ensure all fields (damage, hasHit, etc.) are set
+  RangedEnemyBullet bullet = initEnemyBullet(enemy->x + enemy->width / 2.0f, 
+                                            enemy->y + enemy->height / 2.0f, 
+                                            velX, velY, player->x, player->y, 
+                                            ENEMY_BULLET_SPEED);
   dyn_arr_push_back(bullets, &bullet);
   enemy->reloadTimer = enemy->reloadSpeed;
 }
 
-void updateBullets(RangedEnemyBullets* bullets)
+void updateBullets(RangedEnemyBullets* bullets, Player* player)
 {
   for (size_t i = 0; i < bullets->size; i++)
   {
     RangedEnemyBullet* b = dyn_arr_get(bullets, i);
-    b->x += b->velocityX;
-    b->y += b->velocityY;
+    b->x += b->velocityX * deltaTime; // Use deltaTime for consistent speed
+    b->y += b->velocityY * deltaTime;
+
+    float dx = b->x - player->x;
+    float dy = b->y - player->y;
+
+    if (dx * dx + dy * dy > PROJECTILE_CLEANUP_THRESHOLD_SQUARED)
+    {
+      dyn_arr_pop_at(bullets, i);
+      i--;
+    }
+  }
+}
+
+void displayBullets(RangedEnemyBullets* bullets)
+{
+  for (size_t i = 0; i < bullets->size; i++)
+  {
+    RangedEnemyBullet* b = dyn_arr_get(bullets, i);
     DrawRectangle((int)b->x, (int)b->y, (int)ENEMY_BULLET_SIZE, (int)ENEMY_BULLET_SIZE, YELLOW);
   }
 }
@@ -691,6 +696,7 @@ void updateEnemies(Enemies* enemies, Pillars* pillars, Player* player, RangedEne
     {
       enemyDeath(enemies, e->id);
       i--; // Adjust index after removal
+      continue;
     }
     for (size_t j = 0; j < arBullets->size; j++)
     {

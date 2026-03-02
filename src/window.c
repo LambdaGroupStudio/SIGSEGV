@@ -115,7 +115,7 @@ void displayWindow(void)
         updatePlayerRockets(&player, &playerRockets, &pillars, &enemies, &playerExplosions);
         updatePlayerExplosions(&playerExplosions, &enemies);
 
-        updateBullets(&bullets);
+        updateBullets(&bullets, &player);
         updateMeleeEnemyAttacks(&attacks);
 
         // Update camera target after all calculations
@@ -125,8 +125,9 @@ void displayWindow(void)
         ClearBackground(RAYWHITE);
         BeginMode2D(camera);
 
-        displayEnemies(&enemies);
         displayPillars(&pillars);
+        displayEnemies(&enemies);
+        displayBullets(&bullets);
         displayMeleeEnemyAttacks(&attacks);
         displayPlayer(player);
 

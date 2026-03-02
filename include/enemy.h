@@ -53,6 +53,7 @@ typedef struct RangedEnemyBullet
   float targetY;
   float speed;
   int   damage;
+  bool hasHit;
 } RangedEnemyBullet;
 
 typedef struct MeleeEnemyAttack
@@ -103,7 +104,8 @@ void              freeRangedEnemyBullets(RangedEnemyBullets* bullets);
 MeleeEnemyAttack initMeleeEnemyAttack(float x, float y, float width, float height);
 void             initMeleeEnemyAttacks(MeleeEnemyAttacks* attacks);
 
-void updateBullets(RangedEnemyBullets* bullets);
+void updateBullets(RangedEnemyBullets* bullets, Player* player);
+void displayBullets(RangedEnemyBullets* bullets);
 void updateMeleeEnemyAttacks(MeleeEnemyAttacks* attacks);
 void displayMeleeEnemyAttacks(MeleeEnemyAttacks* attacks);
 void freeMeleeEnemyAttacks(MeleeEnemyAttacks* attacks);
