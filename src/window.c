@@ -54,52 +54,6 @@ static void rebuildWorld(Player* player, Pillars* pillars, Enemies* enemies,
   gameTimer = INITIAL_GAME_TIMER;
 }
 
-#include <time.h>
-
-static void rebuildWorld(Player* player, Pillars* pillars, Enemies* enemies,
-                         RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks,
-                         PlayerARBullets* playerARBullets, PlayerShotgunPellets* playerShotgunPellets,
-                         PlayerRockets* playerRockets, PlayerExplosions* playerExplosions)
-{
-  // First free any existing dynamic arrays
-  freePillars(pillars);
-  freeEnemies(enemies);
-  freeRangedEnemyBullets(bullets);
-  freeMeleeEnemyAttacks(attacks);
-  freePlayerARBullets(playerARBullets);
-  freePlayerShotgunPellets(playerShotgunPellets);
-  freePlayerRockets(playerRockets);
-  freePlayerExplosions(playerExplosions);
-
-  // Initialize new dynamic arrays
-  initPillars(pillars);
-  initEnemies(enemies);
-  initRangedEnemyBullets(bullets);
-  initMeleeEnemyAttacks(attacks);
-  initPlayerARBullets(playerARBullets);
-  initPlayerShotgunPellets(playerShotgunPellets);
-  initPlayerRockets(playerRockets);
-  initPlayerExplosions(playerExplosions);
-
-  // Set the random seed so that each generation is unique
-  SetRandomSeed((unsigned int)time(NULL));
-
-  // Initialize player
-  *player = initPlayer();
-  // Spawn player centered above the first pillar
-  player->x = 175.0f;
-  player->y = 400.0f;
-
-  Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
-  addPillar(pillars, &initialPillar);
-
-  // Generation
-  generatePillars(pillars, 60);
-  generateEnemies(enemies, pillars);
-
-  // Reset clock
-  gameTimer = INITIAL_GAME_TIMER;
-}
 
 void initWindow(void)
 {
