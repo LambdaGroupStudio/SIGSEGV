@@ -31,6 +31,7 @@ typedef struct Player
   } weapon;
   float reloadTimer;
   float reloadSpeed;
+  bool  canDoubleJump;
   int   hp;
 } Player;
 
