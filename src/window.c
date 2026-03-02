@@ -6,6 +6,53 @@
 #include <assert.h>
 #include <stdio.h> 
 
+#include <time.h>
+
+static void rebuildWorld(Player* player, Pillars* pillars, Enemies* enemies,
+                         RangedEnemyBullets* bullets, MeleeEnemyAttacks* attacks,
+                         PlayerARBullets* playerARBullets, PlayerShotgunPellets* playerShotgunPellets,
+                         PlayerRockets* playerRockets, PlayerExplosions* playerExplosions)
+{
+  // First free any existing dynamic arrays
+  freePillars(pillars);
+  freeEnemies(enemies);
+  freeRangedEnemyBullets(bullets);
+  freeMeleeEnemyAttacks(attacks);
+  freePlayerARBullets(playerARBullets);
+  freePlayerShotgunPellets(playerShotgunPellets);
+  freePlayerRockets(playerRockets);
+  freePlayerExplosions(playerExplosions);
+
+  // Initialize new dynamic arrays
+  initPillars(pillars);
+  initEnemies(enemies);
+  initRangedEnemyBullets(bullets);
+  initMeleeEnemyAttacks(attacks);
+  initPlayerARBullets(playerARBullets);
+  initPlayerShotgunPellets(playerShotgunPellets);
+  initPlayerRockets(playerRockets);
+  initPlayerExplosions(playerExplosions);
+
+  // Set the random seed so that each generation is unique
+  SetRandomSeed((unsigned int)time(NULL));
+
+  // Initialize player
+  *player = initPlayer();
+  // Spawn player centered above the first pillar
+  player->x = 175.0f;
+  player->y = 400.0f;
+
+  Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
+  addPillar(pillars, &initialPillar);
+
+  // Generation
+  generatePillars(pillars, 60);
+  generateEnemies(enemies, pillars);
+
+  // Reset clock
+  gameTimer = INITIAL_GAME_TIMER;
+}
+
 void initWindow(void)
 {
   int monitor = GetCurrentMonitor();
@@ -19,44 +66,35 @@ void initWindow(void)
 
   InitWindow(width, height, "SIGSEGV");
   ToggleFullscreen();
+  SetRandomSeed((unsigned int)time(NULL));
 }
 
 void displayWindow(void)
 {
-  Player player = initPlayer();
-  // Spawn player centered above the first pillar
-  // First pillar: x=-200, width=850, y=500. Center = -200 + 425 = 225. 
-  // Player width=100. Spawn x = 225 - 50 = 175.
-  // Spawn y = pillar.y - player.height = 500 - 100 = 400.
-  player.x = 175.0f;
-  player.y = 400.0f;
-
+  Player player;
   Pillars pillars;
-  initPillars(&pillars);
   Enemies enemies;
-  initEnemies(&enemies);
   RangedEnemyBullets bullets;
-  initRangedEnemyBullets(&bullets);
   MeleeEnemyAttacks attacks;
-  initMeleeEnemyAttacks(&attacks);
-
   PlayerARBullets playerARBullets;
-  initPlayerARBullets(&playerARBullets);
   PlayerShotgunPellets playerShotgunPellets;
-  initPlayerShotgunPellets(&playerShotgunPellets);
   PlayerRockets playerRockets;
-  initPlayerRockets(&playerRockets);
   PlayerExplosions playerExplosions;
+
+  // Initialize variables to a safe, empty state before the loop
+  // This ensures that the first call to rebuildWorld (which calls free) is safe
+  initPillars(&pillars);
+  initEnemies(&enemies);
+  initRangedEnemyBullets(&bullets);
+  initMeleeEnemyAttacks(&attacks);
+  initPlayerARBullets(&playerARBullets);
+  initPlayerShotgunPellets(&playerShotgunPellets);
+  initPlayerRockets(&playerRockets);
   initPlayerExplosions(&playerExplosions);
 
-  Pillar initialPillar = initPillar(850.0f, 850.0f, -200.0f, 500.0f);
-
-  // Add starting pillar
-  addPillar(&pillars, &initialPillar);
-
-  generatePillars(&pillars, 60);
-
-  generateEnemies(&enemies, &pillars);
+  // Generate initial world
+  rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+               &playerShotgunPellets, &playerRockets, &playerExplosions);
 
   Camera2D camera       = {0};
   int      monitor      = GetCurrentMonitor();
@@ -66,8 +104,6 @@ void displayWindow(void)
   camera.offset         = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.rotation       = 0.0f;
   camera.zoom           = 0.7f;
-
-  gameTimer = INITIAL_GAME_TIMER;
 
   GameState gameState = MAIN_MENU;
 
@@ -81,6 +117,8 @@ void displayWindow(void)
       {
         if (IsKeyPressed(KEY_ENTER))
         {
+          rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+                       &playerShotgunPellets, &playerRockets, &playerExplosions);
           gameState = GAME;
         }
 
@@ -181,12 +219,8 @@ void displayWindow(void)
       {
         if (IsKeyPressed(KEY_R))
         {
-          // Simple reset: re-init everything
-          player = initPlayer();
-          player.x = 175.0f;
-          player.y = 400.0f;
-          gameTimer = INITIAL_GAME_TIMER;
-          // Ideally we would clear arrays here too, but let's keep it simple for now
+          rebuildWorld(&player, &pillars, &enemies, &bullets, &attacks, &playerARBullets, 
+                       &playerShotgunPellets, &playerRockets, &playerExplosions);
           gameState = GAME;
         }
 
