@@ -112,17 +112,21 @@ void displayPlayer(Player player)
 
 void handleMovement(Player* player)
 {
+  if (player->isDashing) return;
+
   if (IsKeyDown(KEY_D))
   {
     if (player->velocityX < 0.0f)
       player->velocityX = 0.0f;
     player->velocityX += player->acceleration * deltaTime;
+    player->facingX = 1.0f;
   }
   else if (IsKeyDown(KEY_A))
   {
     if (player->velocityX > 0.0f)
       player->velocityX = 0.0f;
     player->velocityX -= player->acceleration * deltaTime;
+    player->facingX = -1.0f;
   }
   else
   {
@@ -529,6 +533,7 @@ void handlePlayerCollisions(Player* player, Pillars* pillars)
 
 void handleJump(Player* player)
 {
+  if (player->isDashing) return;
   if (IsKeyPressed(KEY_SPACE))
   {
     if (player->isGrounded)
@@ -544,8 +549,38 @@ void handleJump(Player* player)
   }
 }
 
+void handleDash(Player* player)
+{
+  if (player->dashCooldownTimer > 0.0f)
+    player->dashCooldownTimer -= deltaTime;
+  if (player->dashCooldownTimer < 0.0f)
+    player->dashCooldownTimer = 0.0f;
+
+  if (IsKeyPressed(KEY_Q) && !player->isDashing && player->dashCooldownTimer <= 0.0f)
+  {
+    player->isDashing = true;
+    player->dashTimer = PLAYER_DASH_DURATION;
+    player->dashCooldownTimer = PLAYER_DASH_COOLDOWN;
+    player->velocityX = player->facingX * PLAYER_DASH_SPEED;
+    player->velocityY = 0.0f; // Dash is purely horizontal for snap
+  }
+
+  if (player->isDashing)
+  {
+    player->dashTimer -= deltaTime;
+    player->velocityX = player->facingX * PLAYER_DASH_SPEED;
+    player->velocityY = 0.0f; // Stay horizontal during dash
+    if (player->dashTimer <= 0.0f)
+    {
+      player->isDashing = false;
+      player->velocityX *= 0.1f; // Slow down after dash
+    }
+  }
+}
+
 void handlePlayerGravity(Player* player)
 {
+  if (player->isDashing) return;
   if (!player->isGrounded)
   {
     player->velocityY += gravity * deltaTime;
@@ -562,6 +597,7 @@ void updatePlayer(Player* player, Pillars* pillars)
     diePlayer();
     return;
   }
+  handleDash(player);
   handleMovement(player);
   handleJump(player);
   handlePlayerGravity(player);
@@ -591,6 +627,10 @@ Player initPlayer(void)
   player.reloadSpeed  = 1.0f;
   player.weapon       = AR;
   player.canDoubleJump = true;
+  player.isDashing    = false;
+  player.dashTimer    = 0.0f;
+  player.dashCooldownTimer = 0.0f;
+  player.facingX      = 1.0f;
   player.hp           = PLAYER_HP;
   return player;
 }
