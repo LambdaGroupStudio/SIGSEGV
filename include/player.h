@@ -32,6 +32,10 @@ typedef struct Player
   float reloadTimer;
   float reloadSpeed;
   bool  canDoubleJump;
+  bool  isDashing;
+  float dashTimer;
+  float dashCooldownTimer;
+  float facingX; // To know which way to dash
   int   hp;
 } Player;
 
