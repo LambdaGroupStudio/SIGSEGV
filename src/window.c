@@ -67,6 +67,8 @@ void displayWindow(void)
   camera.rotation       = 0.0f;
   camera.zoom           = 0.7f;
 
+  gameTimer = INITIAL_GAME_TIMER;
+
   GameState gameState = MAIN_MENU;
 
   while (!WindowShouldClose())
@@ -105,6 +107,13 @@ void displayWindow(void)
         updateEnemies(&enemies, &pillars, &player, &bullets, &attacks, &playerARBullets,
                       &playerShotgunPellets, &playerRockets);
         takeDamage(&player, &attacks, &bullets);
+
+        gameTimer -= deltaTime;
+        if (gameTimer <= 0.0f)
+        {
+          gameTimer = 0.0f;
+          gameState = DEAD;
+        }
 
         Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
         playerShoot(&player, mouseWorldPos.x, mouseWorldPos.y, &playerARBullets,
@@ -155,6 +164,11 @@ void displayWindow(void)
         sprintf(hpText, "HP: %d", player.hp);
         DrawText(hpText, 10, 40, 20, player.hp < 30 ? RED : GREEN);
 
+        char timerText[32];
+        sprintf(timerText, "Time: %.1f", gameTimer);
+        DrawText(timerText, screenWidth / 2 - MeasureText(timerText, 30) / 2, 20, 30,
+                 gameTimer < 10.0f ? RED : BLACK);
+
         EndDrawing();
         break;
       }
@@ -167,6 +181,7 @@ void displayWindow(void)
           player = initPlayer();
           player.x = 175.0f;
           player.y = 400.0f;
+          gameTimer = INITIAL_GAME_TIMER;
           // Ideally we would clear arrays here too, but let's keep it simple for now
           gameState = GAME;
         }
