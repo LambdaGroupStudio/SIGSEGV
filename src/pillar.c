@@ -13,7 +13,7 @@ Pillar initPillar(float width, float height, float x, float y)
   return pillar;
 }
 
-void initPillars(Pillars* pillars) { *pillars = dyn_arr_create(sizeof(Pillars)); }
+void initPillars(Pillars* pillars) { *pillars = dyn_arr_create(sizeof(Pillar)); }
 
 void addPillar(Pillars* pillars, Pillar* pillar) { dyn_arr_push_back(pillars, pillar); }
 

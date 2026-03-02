@@ -75,10 +75,11 @@ void takeDamage(Player* player, MeleeEnemyAttacks* attacks, RangedEnemyBullets* 
   for (size_t i = 0; i < bullets->size; i++)
   {
     RangedEnemyBullet* b = dyn_arr_get(bullets, i);
-    if (isColliding(player->x, player->y, player->width, player->height, b->x, b->y,
-                    ENEMY_BULLET_SIZE, ENEMY_BULLET_SIZE))
+    if (!b->hasHit && isColliding(player->x, player->y, player->width, player->height, b->x, b->y,
+                                  ENEMY_BULLET_SIZE, ENEMY_BULLET_SIZE))
     {
       player->hp -= b->damage;
+      b->hasHit = true; // Mark as hit to prevent dual-processing
       dyn_arr_pop_at(bullets, i);
       i--;
     }
