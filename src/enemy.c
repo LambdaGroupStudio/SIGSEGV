@@ -692,32 +692,31 @@ void updateEnemies(Enemies* enemies, Pillars* pillars, Player* player, RangedEne
         meleeEnemyAttack(e, attacks);
       }
     }
-    if (isDead(e))
-    {
-      enemyDeath(enemies, e->id);
-      i--; // Adjust index after removal
-      continue;
-    }
     for (size_t j = 0; j < arBullets->size; j++)
     {
       PlayerARBullet* b = dyn_arr_get(arBullets, j);
-      if (isColliding(b->x, b->y, 10, 10, e->x, e->y, e->width, e->height))
+      if (isColliding(b->x - PLAYER_AR_BULLET_SIZE * 0.5f, b->y - PLAYER_AR_BULLET_SIZE * 0.5f,
+                      PLAYER_AR_BULLET_SIZE, PLAYER_AR_BULLET_SIZE, e->x, e->y, e->width, e->height))
       {
         enemyTakeDamage(e, b->damage);
         dyn_arr_pop_at(arBullets, j);
         j--;
       }
     }
+
     for (size_t j = 0; j < shotgunPellets->size; j++)
     {
       PlayerShotgunPellet* p = dyn_arr_get(shotgunPellets, j);
-      if (isColliding(p->x, p->y, 10, 10, e->x, e->y, e->width, e->height))
+      if (isColliding(p->x - PLAYER_SHOTGUN_PELLET_SIZE * 0.5f,
+                      p->y - PLAYER_SHOTGUN_PELLET_SIZE * 0.5f, PLAYER_SHOTGUN_PELLET_SIZE,
+                      PLAYER_SHOTGUN_PELLET_SIZE, e->x, e->y, e->width, e->height))
       {
         enemyTakeDamage(e, p->damage);
         dyn_arr_pop_at(shotgunPellets, j);
         j--;
       }
     }
+
     for (size_t j = 0; j < rockets->size; j++)
     {
       PlayerRocket* r               = dyn_arr_get(rockets, j);
@@ -727,6 +726,17 @@ void updateEnemies(Enemies* enemies, Pillars* pillars, Player* player, RangedEne
       {
         enemyTakeDamage(e, r->damage);
       }
+    }
+
+    if (isDead(e))
+    {
+      if (e->type == MELEE)
+        gameTimer += MELEE_KILL_TIMER_REWARD;
+      else if (e->type == RANGED)
+        gameTimer += RANGED_KILL_TIMER_REWARD;
+
+      enemyDeath(enemies, e->id);
+      i--; // Adjust index after removal
     }
   }
 }
